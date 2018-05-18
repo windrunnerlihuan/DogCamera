@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.dogcamera.activity.CameraActivity"
+    android:id="@+id/record_root_layout"
+    >
+
+    <!--glsurfaceview-->
+    <com.dogcamera.widget.RecordView
+        android:id="@+id/record_glview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        />
+
+    <!--滤镜选择器-->
+    <com.dogcamera.widget.VideoFilterSwitcher
+        android:id="@+id/record_filter_switcher"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|center_horizontal" />
+
+    <!--滤镜提示hint-->
+    <com.dogcamera.widget.VideoFilterHintView
+        android:id="@+id/record_filter_hint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginLeft="15dp" />
+
+    <!--录制时长进度条-->
+    <!--进度条背景-->
+    <View
+        android:id="@+id/record_seg_line_bg"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:layout_gravity="center"
+        android:background="@drawable/record_seg_line_bg"
+        android:layerType="software"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginBottom="158dp"
+        />
+    <!--进度条-->
+    <LinearLayout
+        android:id="@+id/record_seg_line_progress"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/record_seg_line_bg"
+        app:layout_constraintEnd_toEndOf="@id/record_seg_line_bg"
+        >
+    </LinearLayout>
+
+    <!--录制按钮-->
+    <!--圆形进度条-->
+    <com.dogcamera.widget.CircleProgressView
+        android:id="@+id/record_button_progress"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="53dp"
+        app:arc_bg_color="@color/record_button_progress_arc"
+        app:arc_color="@android:color/white"
+        app:circle_stroke="4dp"
+        app:progress_rate="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+    <!--停止录制方形背景-->
+    <View
+        android:id="@+id/record_button_stop_bg"
+        android:layout_width="33dp"
+        android:layout_height="33dp"
+        android:background="@drawable/record_button_stop_bg"
+        app:layout_constraintBottom_toBottomOf="@id/record_button_progress"
+        app:layout_constraintEnd_toEndOf="@id/record_button_progress"
+        app:layout_constraintStart_toStartOf="@id/record_button_progress"
+        app:layout_constraintTop_toTopOf="@id/record_button_progress"
+        android:visibility="gone"
+        />
+    <!--圆形背景-->
+    <View
+        android:id="@+id/record_button_bg"
+        android:layout_width="72dp"
+        android:layout_height="72dp"
+        android:background="@drawable/record_button_bg"
+        app:layout_constraintBottom_toBottomOf="@id/record_button_progress"
+        app:layout_constraintEnd_toEndOf="@id/record_button_progress"
+        app:layout_constraintStart_toStartOf="@id/record_button_progress"
+        app:layout_constraintTop_toTopOf="@id/record_button_progress"
+        />
+    <TextView
+        android:id="@+id/record_button_txt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="点击拍摄"
+        android:textColor="@android:color/white"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toBottomOf="@id/record_button_progress"
+        app:layout_constraintEnd_toEndOf="@id/record_button_progress"
+        app:layout_constraintStart_toStartOf="@id/record_button_progress"
+        app:layout_constraintTop_toTopOf="@id/record_button_progress"
+        />
+    
+    <!--计时器-->
+    <TextView
+        android:id="@+id/record_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:textSize="15sp"
+        tools:text="00:00"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/record_button_progress"
+        android:layout_marginTop="10dp"
+        android:visibility="visible"/>
+
+    <!--下一步-->
+    <TextView
+        android:id="@+id/record_button_next"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="下一步 >>"
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        app:layout_constraintTop_toTopOf="@id/record_button_progress"
+        app:layout_constraintBottom_toBottomOf="@id/record_button_progress"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/record_button_progress"
+        />
+
+    <!--取消-->
+    <ImageView
+        android:id="@+id/record_button_delete"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@mipmap/record_delete_icon"
+        app:layout_constraintTop_toTopOf="@id/record_button_progress"
+        app:layout_constraintBottom_toBottomOf="@id/record_button_progress"
+        app:layout_constraintEnd_toStartOf="@id/record_button_progress"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
+</android.support.constraint.ConstraintLayout>
