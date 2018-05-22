@@ -1,6 +1,7 @@
 package com.dogcamera.activity;
 
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.graphics.Color;
 import android.hardware.Camera;
@@ -33,6 +34,7 @@ import com.dogcamera.filter.GPUImageSildeFilterGroup;
 import com.dogcamera.utils.CameraUtils;
 import com.dogcamera.utils.FilterProvider;
 import com.dogcamera.utils.SystemUIUtils;
+import com.dogcamera.utils.VideoUtils;
 import com.dogcamera.widget.CircleProgressView;
 import com.dogcamera.widget.RecordView;
 import com.dogcamera.widget.VideoFilterHintView;
@@ -41,6 +43,8 @@ import com.dogcamera.widget.VideoFilterSwitcher;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import butterknife.BindView;
@@ -101,6 +105,10 @@ public class CameraActivity extends BaseActivity {
     private ProgressHandler mHandler;
 
     private FilterProvider mFilterProvider;
+
+    private List<String> mRecordPathList = new ArrayList<>();
+
+    ProgressDialog mProgressDialog;
 
     private class ProgressHandler extends Handler {
 
@@ -250,10 +258,10 @@ public class CameraActivity extends BaseActivity {
                 mIsFlinging = true;
                 int end = 0;
                 int pageOffset = 0;
-                if(velocityX <= -4000f && mDividerOffset < 0){
+                if(velocityX <= -3000f && mDividerOffset < 0){
                     end = -mRecordView.getWidth();
                     pageOffset = 1;
-                }else if(velocityX >= 4000f && mDividerOffset > 0){
+                }else if(velocityX >= 3000f && mDividerOffset > 0){
                     end = mRecordView.getWidth();
                     pageOffset = -1;
                 }
@@ -464,8 +472,11 @@ public class CameraActivity extends BaseActivity {
             Toast.makeText(this, "创建临时文件失败，录制中断", Toast.LENGTH_LONG).show();
             finish();
         }
-        mRecordView.setEncodeVideoPath(tempFile.getAbsolutePath());
+        String recordPath = tempFile.getAbsolutePath();
+        mRecordView.setEncodeVideoPath(recordPath);
         mRecordView.startRecord();
+        //记录录制视频路径
+        mRecordPathList.add(recordPath);
     }
 
     private void doStopRecord() {
@@ -489,7 +500,54 @@ public class CameraActivity extends BaseActivity {
 
     @OnClick(R.id.record_button_next)
     void gotoEditPage() {
+        showProgressDialog(true);
+        new Thread(){
+            @Override
+            public void run() {
+                super.run();
+                File tempFile = null;
+                try {
+                    tempFile = File.createTempFile("merge_shortvideo", ".mp4", new File(RecordConstant.RECORD_DIR));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (tempFile == null) {
+                    runOnUiThread(() -> {
+                        Toast.makeText(CameraActivity.this, "创建临时文件失败，录制中断", Toast.LENGTH_LONG).show();
+                        finish();
+                    });
+                    return;
 
+                }
+                boolean isSuccess = VideoUtils.joinVideoForSameCodec(mRecordPathList, tempFile.getAbsolutePath());
+                runOnUiThread(() -> {
+                    Toast.makeText(CameraActivity.this, isSuccess ? "视频拼接成功" : "视频拼接失败", Toast.LENGTH_SHORT).show();
+                    showProgressDialog(false);
+                    if(isSuccess){
+                        doStartEditPage();
+                    }else{
+                        finish();
+                    }
+                });
+            }
+        }.start();
     }
+
+    private void showProgressDialog(boolean isShow){
+        if(isShow && mProgressDialog != null && !mProgressDialog.isShowing()){
+            mProgressDialog.show();
+        }else if(isShow && mProgressDialog == null ){
+            mProgressDialog = new ProgressDialog(this);
+            mProgressDialog.setMessage("开始拼接视频...");
+            mProgressDialog.show();
+        }else if(!isShow && mProgressDialog != null){
+            mProgressDialog.dismiss();
+        }
+    }
+
+    private void doStartEditPage(){
+        //TODO
+    }
+
 
 }

@@ -36,7 +36,7 @@ import static com.dogcamera.utils.VertexUtils.CUBE;
  * Created by huanli on 2018/2/27.
  */
 @SuppressLint("NewApi")
-public class RecordView extends BaseGLSurfaceView /*implements Camera.PreviewCallback*/ {
+public class RecordView extends BaseGLSurfaceView {
     private static final String TAG = "RecordView";
 
 
@@ -48,7 +48,6 @@ public class RecordView extends BaseGLSurfaceView /*implements Camera.PreviewCal
     private static final int RECORDING_RESUMED = 2;
 
     protected Camera mCamera;
-    private byte[] mCallbackBuffer;
 
     private TextureMovieEncoder mVideoEncoder;
 
@@ -277,12 +276,6 @@ public class RecordView extends BaseGLSurfaceView /*implements Camera.PreviewCal
     public void setOnRecordingErrorListener(OnRecordingErrorListener onRecordingErrorListener) {
         mOnRecordingErrorListener = onRecordingErrorListener;
     }
-    /*
-    @Override
-    public void onPreviewFrame(byte[] bytes, Camera camera) {
-        mCamera.addCallbackBuffer(bytes);
-    }
-    */
 
     public interface OnRecordingErrorListener {
         void onError(int errorType);
