@@ -5,7 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.opengl.GLES20;
 import android.util.Log;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 
 import java.nio.FloatBuffer;
 
@@ -134,8 +134,10 @@ public class GPUImageSildeFilterGroup extends GPUImageFilter {
 
     }
 
-    public void setDividerOffset(int offset){
+    public synchronized void setDividerOffset(int offset){
+//        runOnDraw(() -> mDividerOffset = offset);
         mDividerOffset = offset;
+
     }
 
     public int getDividerOffset(){
@@ -145,7 +147,7 @@ public class GPUImageSildeFilterGroup extends GPUImageFilter {
     public void flingTo(int end, OnFilterScrollListener onFilterScrollListener){
         Log.e(TAG, "scrollTo start = " + mDividerOffset + " end = " + end);
         ValueAnimator valueAnimator = ValueAnimator.ofInt(mDividerOffset, end).setDuration(SCROLL_TIME);
-        valueAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
+        valueAnimator.setInterpolator(new DecelerateInterpolator());
         valueAnimator.addUpdateListener(animation -> {
             int offset = (int) animation.getAnimatedValue();
             Log.e(TAG, "flingTo = " + offset);

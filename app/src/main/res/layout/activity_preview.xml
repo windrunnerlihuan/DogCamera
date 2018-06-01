@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/preview_root_layout">
+
+    <!--顶部三个按钮-->
+    <!--音乐-->
+    <ImageView
+        android:id="@+id/preview_topbar_music"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@mipmap/preview_topbar_music_icon"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/preview_topbar_chart"
+        />
+    <!--贴纸-->
+    <ImageView
+        android:id="@+id/preview_topbar_chart"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@mipmap/preview_topbar_chart_icon"
+        app:layout_constraintBottom_toBottomOf="@id/preview_topbar_music"
+        app:layout_constraintTop_toTopOf="@id/preview_topbar_music"
+        app:layout_constraintStart_toEndOf="@id/preview_topbar_music"
+        app:layout_constraintEnd_toStartOf="@id/preview_topbar_effect"
+        />
+    <!--动效-->
+    <ImageView
+        android:id="@+id/preview_topbar_effect"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@mipmap/preview_topbar_effect_icon"
+        app:layout_constraintBottom_toBottomOf="@id/preview_topbar_music"
+        app:layout_constraintTop_toTopOf="@id/preview_topbar_music"
+        app:layout_constraintStart_toEndOf="@id/preview_topbar_chart"
+        app:layout_constraintEnd_toStartOf="parent"
+        />
+
+</android.support.constraint.ConstraintLayout>

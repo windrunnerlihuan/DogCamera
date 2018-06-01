@@ -16,10 +16,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <!--测试界面-->
-        <activity
-            android:name=".test.CameraCaptureActivity">
-        </activity>
+
         <!--引导页-->
         <activity
             android:name=".activity.SplashActivity"
@@ -43,6 +40,20 @@
                     android:scheme="dog" />
             </intent-filter>
         </activity>
+        <!--预览页-->
+        <activity android:name=".activity.PreviewActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Dark">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:host="preview"
+                    android:scheme="dog" />
+            </intent-filter>
+        </activity>
+
     </application>
 
 </manifest>
