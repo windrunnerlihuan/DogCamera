@@ -42,6 +42,32 @@ public class ViewUtils {
     }
 
     /**
+     * 得到屏幕像素高度
+     *
+     * @param context
+     * @return
+     */
+    public static int getScreenHeightPixels(Context context) {
+        if (context == null) {
+            //Log.e("Can't get screen size while the activity is null!");
+            return 0;
+        }
+
+        if (screenHeightPixels > 0) {
+            return screenHeightPixels;
+        }
+        DisplayMetrics dm = new DisplayMetrics();
+        WindowManager manager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+
+        Display display = manager.getDefaultDisplay();
+        if (display != null) {
+            display.getMetrics(dm);
+            screenHeightPixels = dm.heightPixels;
+        }
+        return screenHeightPixels;
+    }
+
+    /**
      * dip转px
      *
      * @param context

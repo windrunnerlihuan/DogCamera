@@ -43,7 +43,7 @@
         <!--预览页-->
         <activity android:name=".activity.PreviewActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Dark">
+            android:theme="@style/AppTheme.Fullscreen.Dark">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.BROWSABLE" />

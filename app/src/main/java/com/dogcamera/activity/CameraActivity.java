@@ -3,8 +3,10 @@ package com.dogcamera.activity;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.hardware.Camera;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -377,6 +379,12 @@ public class CameraActivity extends BaseActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        mRecordView.onPause();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         if (mRecordView != null)
@@ -520,11 +528,12 @@ public class CameraActivity extends BaseActivity {
 
                 }
                 boolean isSuccess = VideoUtils.joinVideoForSameCodec(mRecordPathList, tempFile.getAbsolutePath());
+                File finalTempFile = tempFile;
                 runOnUiThread(() -> {
                     Toast.makeText(CameraActivity.this, isSuccess ? "视频拼接成功" : "视频拼接失败", Toast.LENGTH_SHORT).show();
                     showProgressDialog(false);
                     if(isSuccess){
-                        doStartEditPage();
+                        doStartEditPage(finalTempFile.getAbsolutePath());
                     }else{
                         finish();
                     }
@@ -545,8 +554,11 @@ public class CameraActivity extends BaseActivity {
         }
     }
 
-    private void doStartEditPage(){
+    private void doStartEditPage(String mergePath){
         //TODO
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("dog://preview"));
+        i.putExtra("uri", mergePath);
+        startActivity(i);
     }
 
 

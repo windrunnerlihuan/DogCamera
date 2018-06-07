@@ -78,9 +78,13 @@ public class AndroidMuxer {
     public boolean release() {
         synchronized (mMuxer) {
             if (++mNumReleases == mNumTracks) {
-                mMuxer.stop();
-                mMuxer.release();
-                return true;
+                try {
+                    mMuxer.stop();
+                    mMuxer.release();
+                    return true;
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
             }
         }
         return false;

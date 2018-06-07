@@ -95,8 +95,6 @@ public abstract class BaseGLSurfaceView extends GLSurfaceView implements GLSurfa
     @Override
     public void onSurfaceChanged(GL10 gl10, int width, int height) {
         GLES20.glViewport(0, 0, width, height);
-        mSurfaceWidth = width;
-        mSurfaceHeight = height;
     }
 
     @Override
@@ -232,12 +230,7 @@ public abstract class BaseGLSurfaceView extends GLSurfaceView implements GLSurfa
 
     public void changeGpuImageFilter(final GPUImageFilter filter) {
         mCurrentGPUImageFilter = filter;
-        runOnDraw(new Runnable() {
-            @Override
-            public void run() {
-                initGPUImageFilter(mSurfaceWidth, mSurfaceHeight, filter);
-            }
-        });
+        runOnDraw(() -> initGPUImageFilter(mSurfaceWidth, mSurfaceHeight, filter));
     }
 
     public GPUImageFilter getCurrentGPUImageFilter() {
@@ -284,6 +277,10 @@ public abstract class BaseGLSurfaceView extends GLSurfaceView implements GLSurfa
         setRotation(rotation);
     }
 
+    public void setScaleType(ScaleType scaleType) {
+        mScaleType = scaleType;
+    }
+
     public boolean isFlippedHorizontally() {
         return mFlipHorizontal;
     }
@@ -291,6 +288,7 @@ public abstract class BaseGLSurfaceView extends GLSurfaceView implements GLSurfa
     public boolean isFlippedVertically() {
         return mFlipVertical;
     }
+
     protected void runAll(Queue<Runnable> queue) {
         synchronized (queue) {
             while (!queue.isEmpty()) {
