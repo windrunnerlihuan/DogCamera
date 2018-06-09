@@ -6,15 +6,14 @@ import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
-import android.support.annotation.NonNull;
 import android.util.AttributeSet;
 
+import com.dogcamera.av.Rotation;
+import com.dogcamera.av.ScaleType;
 import com.dogcamera.filter.GPUImageExtTexFilter;
 import com.dogcamera.filter.GPUImageFilter;
 import com.dogcamera.filter.GPUImageFilterGroup;
 import com.dogcamera.utils.OpenGlUtils;
-import com.dogcamera.av.Rotation;
-import com.dogcamera.av.ScaleType;
 import com.dogcamera.utils.TextureRotationUtil;
 import com.dogcamera.utils.VertexUtils;
 
@@ -24,10 +23,7 @@ import java.nio.FloatBuffer;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLSurface;
 import javax.microedition.khronos.opengles.GL10;
 
 /**

@@ -13,7 +13,6 @@
         android:layout_height="50dp"
         android:src="@mipmap/preview_topbar_music_icon"
         android:padding="10dp"
-        android:scaleType="fitXY"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/preview_topbar_chart"
         />
@@ -24,7 +23,6 @@
         android:layout_height="50dp"
         android:src="@mipmap/preview_topbar_chart_icon"
         android:padding="10dp"
-        android:scaleType="fitXY"
         app:layout_constraintStart_toEndOf="@id/preview_topbar_music"
         app:layout_constraintEnd_toStartOf="@+id/preview_topbar_effect"
         />
@@ -35,7 +33,6 @@
         android:layout_height="50dp"
         android:src="@mipmap/preview_topbar_effect_icon"
         android:padding="10dp"
-        android:scaleType="fitXY"
         app:layout_constraintStart_toEndOf="@id/preview_topbar_chart"
         app:layout_constraintEnd_toStartOf="parent"
         />
@@ -49,13 +46,14 @@
         app:layout_constraintBottom_toTopOf="@+id/preview_bottom_container"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_goneMarginBottom="200dp"
         />
 
     <!--方形进度条-->
     <com.dogcamera.widget.RectProgressView
         android:id="@+id/preview_rect_progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         app:layout_constraintStart_toStartOf="@id/preview_videoview"
         app:layout_constraintEnd_toEndOf="@id/preview_videoview"
         app:layout_constraintTop_toTopOf="@+id/preview_videoview"
@@ -67,8 +65,44 @@
     <FrameLayout
         android:id="@+id/preview_bottom_container"
         android:layout_width="match_parent"
-        android:layout_height="267dp"
+        android:layout_height="250dp"
         app:layout_constraintBottom_toBottomOf="parent"
+        android:visibility="gone"
+        >
+        <Button
+            android:id="@+id/preview_test"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="测试"/>
+
+        <Button
+            android:id="@+id/preview_test2"
+            android:layout_gravity="center_vertical"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="测试2"/>
+    </FrameLayout>
+
+    <ImageView
+        android:id="@+id/preview_finish"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@mipmap/preview_finish"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/preview_videoview"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+    <ImageView
+        android:id="@+id/preview_back"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@mipmap/preview_back"
+        app:layout_constraintTop_toTopOf="@+id/preview_finish"
+        app:layout_constraintBottom_toBottomOf="@+id/preview_finish"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/preview_finish"
         />
 
 </android.support.constraint.ConstraintLayout>

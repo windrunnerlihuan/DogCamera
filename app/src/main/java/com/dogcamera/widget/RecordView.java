@@ -11,18 +11,11 @@ import android.util.Log;
 
 import com.dogcamera.av.EncoderConfig;
 import com.dogcamera.av.Rotation;
-import com.dogcamera.av.ScaleType;
 import com.dogcamera.av.TextureMovieEncoder;
+import com.dogcamera.filter.GPUImageFilter;
 import com.dogcamera.utils.CameraUtils;
-import com.dogcamera.utils.TextureRotationUtil;
-import com.dogcamera.utils.VideoUtils;
 
 import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.FloatBuffer;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -30,7 +23,6 @@ import javax.microedition.khronos.opengles.GL10;
 import static com.dogcamera.utils.CameraUtils.PICSIZERATE;
 import static com.dogcamera.utils.CameraUtils.PREVIEW_RESOLUTION_HEIGHT;
 import static com.dogcamera.utils.CameraUtils.PREVIEW_RESOLUTION_WIDTH;
-import static com.dogcamera.utils.VertexUtils.CUBE;
 
 /**
  * Created by huanli on 2018/2/27.
@@ -57,6 +49,8 @@ public class RecordView extends BaseGLSurfaceView {
     private String mEncodeVideoPath;
 
     private OnRecordingErrorListener mOnRecordingErrorListener;
+
+    private String mFilterId;
 
     public RecordView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -194,7 +188,7 @@ public class RecordView extends BaseGLSurfaceView {
                 case RECORDING_OFF:
                     mVideoEncoder.setCubeAndTextureBuffer(mGLCubeBuffer, mGLTextureBuffer);
                     mVideoEncoder.startRecording(new EncoderConfig(EGL14.eglGetCurrentContext(),
-                            new File(mEncodeVideoPath), getEncoderImageDimen()[0], getEncoderImageDimen()[1]));
+                            new File(mEncodeVideoPath), getEncoderImageDimen()[0], getEncoderImageDimen()[1], mFilterId));
                     mVideoEncoder.setTextureId(textureId);
                     mRecordingStatus = RECORDING_ON;
                     break;
@@ -261,6 +255,11 @@ public class RecordView extends BaseGLSurfaceView {
     public void exitRecord() {
         stopRecord();
         releaseCamera();
+    }
+
+    public void changeGpuImageFilter(GPUImageFilter filter, String filterId) {
+        super.changeGpuImageFilter(filter);
+        mFilterId = filterId;
     }
 
     @Override

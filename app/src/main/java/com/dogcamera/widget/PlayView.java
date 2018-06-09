@@ -1,15 +1,11 @@
 package com.dogcamera.widget;
 
-import android.app.Activity;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.Surface;
-
-import com.dogcamera.utils.ViewUtils;
 
 import java.io.IOException;
 
@@ -42,18 +38,18 @@ public class PlayView extends BaseGLSurfaceView {
         }
         mPlayVideoPath = path;
 
-        MediaMetadataRetriever retr = new MediaMetadataRetriever();
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
         try {
 
             String tmp;
 
-            retr.setDataSource(path);
-            String rotation = retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
-            tmp = retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
+            mmr.setDataSource(path);
+            String rotation = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
+            tmp = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
             if (!TextUtils.isEmpty(tmp)) {
                 mVideoWidth = Integer.parseInt(tmp);
             }
-            tmp = retr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
+            tmp = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
             if (!TextUtils.isEmpty(tmp)) {
                 mVideoHeight = Integer.parseInt(tmp);
             }
@@ -73,8 +69,7 @@ public class PlayView extends BaseGLSurfaceView {
             e.printStackTrace();
 
         } finally {
-
-            retr.release();
+            mmr.release();
         }
     }
 
@@ -107,9 +102,7 @@ public class PlayView extends BaseGLSurfaceView {
             mSurfaceWidth = (int) (originHeight * (outputWidth * 1f / outputHeight) + 0.5f);
         }
 
-        ((Activity) getContext()).runOnUiThread(() -> {
-            requestLayout();
-        });
+        post(this::requestLayout);
 
     }
 
@@ -163,6 +156,7 @@ public class PlayView extends BaseGLSurfaceView {
 
     public void stopVideo(){
         if(mMediaPlayer != null){
+            mMediaPlayer.pause();
             mMediaPlayer.stop();
         }
     }

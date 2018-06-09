@@ -24,7 +24,7 @@ public class RectProgressView extends View {
 
     private int mDrawLen = 0;
 
-    private float mPrevProgress;
+    private float mPrevProgress = -1;
     private long mPrevTime;
 
     private int mWidth;

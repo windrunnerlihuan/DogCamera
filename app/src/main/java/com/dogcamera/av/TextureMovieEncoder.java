@@ -66,7 +66,6 @@ public class TextureMovieEncoder implements Runnable {
     private static final int MSG_FRAME_AVAILABLE = 3;
     private static final int MSG_SET_TEXTURE_ID = 4;
     private static final int MSG_UPDATE_SHARED_CONTEXT = 6;
-    private static final int MSG_UPDATE_FILTER = 7;
     private static final int MSG_QUIT = 8;
 
     private static final int ERROR_INIT = 0;
@@ -91,7 +90,8 @@ public class TextureMovieEncoder implements Runnable {
     private volatile boolean mRunning;
 
     //GPUImageFilter
-    private GPUImageFilterGroup gpuImageFilter;
+    private GPUImageFilterGroup mGPUImageFilterGroup;
+    private GPUImageFilter mCurrentFilter;
 
     private EncoderConfig mConfig;
 
@@ -173,15 +173,6 @@ public class TextureMovieEncoder implements Runnable {
      */
     public void updateSharedContext(EGLContext sharedContext) {
         mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_SHARED_CONTEXT, sharedContext));
-    }
-
-    public void updateFilter() {
-        synchronized (mReadyFence) {
-            if (!mReady) {
-                return;
-            }
-        }
-        mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE_FILTER));
     }
 
     /**
@@ -305,10 +296,6 @@ public class TextureMovieEncoder implements Runnable {
                     encoder.handleUpdateSharedContext((EGLContext) inputMessage.obj);
                     break;
 
-                case MSG_UPDATE_FILTER:
-                    encoder.handleUpdateFilter();
-                    break;
-
                 case MSG_QUIT:
                     Looper looper = Looper.myLooper();
                     if (looper != null) {
@@ -363,8 +350,8 @@ public class TextureMovieEncoder implements Runnable {
             mAudioEncoder.start();
         }
 
-        if (gpuImageFilter != null && mGLCubeBuffer != null && mGLTextureBuffer != null) {
-            gpuImageFilter.onDraw(mTextureId, mGLCubeBuffer, mGLTextureBuffer);
+        if (mGPUImageFilterGroup != null && mGLCubeBuffer != null && mGLTextureBuffer != null) {
+            mGPUImageFilterGroup.onDraw(mTextureId, mGLCubeBuffer, mGLTextureBuffer);
         }
 
         mInputWindowSurface.setPresentationTime(timestampNanos);
@@ -471,23 +458,20 @@ public class TextureMovieEncoder implements Runnable {
     }
 
     public void initGPUImageFilter(int w, int h, GPUImageFilter filter) {
-        if (gpuImageFilter != null) {
-            gpuImageFilter.destroy();
-            gpuImageFilter = null;
+        if (mGPUImageFilterGroup != null) {
+            mGPUImageFilterGroup.destroy();
+            mGPUImageFilterGroup = null;
         }
 
-        gpuImageFilter = new GPUImageFilterGroup();
+        mGPUImageFilterGroup = new GPUImageFilterGroup();
 
-        gpuImageFilter.addFilter(new GPUImageExtTexFilter());
+        mGPUImageFilterGroup.addFilter(new GPUImageExtTexFilter());
 
-        gpuImageFilter.addFilter(filter);
+        mGPUImageFilterGroup.addFilter(filter);
 
-        gpuImageFilter.init();
+        mGPUImageFilterGroup.init();
 
-        gpuImageFilter.onOutputSizeChanged(w, h);
-    }
-
-    private void handleUpdateFilter() {
+        mGPUImageFilterGroup.onOutputSizeChanged(w, h);
     }
 
     private void releaseEncoder() {
@@ -511,9 +495,9 @@ public class TextureMovieEncoder implements Runnable {
             mEglCore.release();
             mEglCore = null;
         }
-        if (gpuImageFilter != null) {
-            gpuImageFilter.destroy();
-            gpuImageFilter = null;
+        if (mGPUImageFilterGroup != null) {
+            mGPUImageFilterGroup.destroy();
+            mGPUImageFilterGroup = null;
         }
     }
 

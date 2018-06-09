@@ -24,12 +24,15 @@ public class EncoderConfig {
     File mOutputFile;
     int mWidth;
     int mHeight;
+    String mFilterId;
 
-    public EncoderConfig(EGLContext eglContext, File outputFile, int width, int height) {
+
+    public EncoderConfig(EGLContext eglContext, File outputFile, int width, int height, String filterId) {
         mEglContext = eglContext;
         mOutputFile = outputFile;
         mWidth = width;
         mHeight = height;
+        mFilterId = filterId;
     }
 
 }

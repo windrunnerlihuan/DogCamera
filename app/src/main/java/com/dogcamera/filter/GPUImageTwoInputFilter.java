@@ -45,8 +45,6 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
             "}";
     private static final String TAG = "GPUImageTwoInputFilter";
 
-    protected static boolean DEBUG = true;
-
     public int mFilterSecondTextureCoordinateAttribute;
     public int mFilterInputTextureUniform2;
     public int mFilterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
@@ -91,9 +89,6 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
                     }
                     GLES20.glActiveTexture(GLES20.GL_TEXTURE3);
                     mFilterSourceTexture2 = OpenGlUtils.loadTexture(bitmap, OpenGlUtils.NO_TEXTURE, false);
-                    if (DEBUG) {
-                        Log.d(TAG, "GPUImage textureId =" + mFilterSourceTexture2);
-                    }
                 }
             }
         });
@@ -116,6 +111,7 @@ public class GPUImageTwoInputFilter extends GPUImageFilter {
                 mFilterSourceTexture2
         }, 0);
         mFilterSourceTexture2 = OpenGlUtils.NO_TEXTURE;
+        recycleBitmap();
     }
 
     @Override

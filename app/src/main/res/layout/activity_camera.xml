@@ -136,8 +136,8 @@
     <!--取消-->
     <ImageView
         android:id="@+id/record_button_delete"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:src="@mipmap/record_delete_icon"
         app:layout_constraintTop_toTopOf="@id/record_button_progress"
         app:layout_constraintBottom_toBottomOf="@id/record_button_progress"

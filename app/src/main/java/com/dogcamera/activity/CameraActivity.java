@@ -112,7 +112,7 @@ public class CameraActivity extends BaseActivity {
 
     ProgressDialog mProgressDialog;
 
-    private class ProgressHandler extends Handler {
+    private static class ProgressHandler extends Handler {
 
         private WeakReference<CameraActivity> mContextRef;
 
@@ -189,7 +189,7 @@ public class CameraActivity extends BaseActivity {
         newFilter.setFilter(mFilterProvider.createFilter(this, id),
                 mFilterProvider.createFilter(this, lId),
                 mFilterProvider.createFilter(this, rId));
-        mRecordView.changeGpuImageFilter(newFilter);
+        mRecordView.changeGpuImageFilter(newFilter, id);
     }
 
     private void changeFilter(String id) {
@@ -325,7 +325,7 @@ public class CameraActivity extends BaseActivity {
         focusImageView.setLayoutParams(new FrameLayout.LayoutParams(250, 250));
         focusImageView.setX(event.getX() - 125);
         focusImageView.setY(event.getY() - 125);
-        focusImageView.setImageDrawable(getResources().getDrawable(R.mipmap.record_foucs_icon));
+        focusImageView.setImageDrawable(getResources().getDrawable(R.mipmap.record_focus_icon));
         mPreFocusAnimationView = focusImageView;
         mRootView.addView(focusImageView);
 
@@ -393,7 +393,7 @@ public class CameraActivity extends BaseActivity {
         mHandler = null;
     }
 
-    public void updateProgressUI() {
+    private void updateProgressUI() {
         mProgressTimeMs += UPDATE_PROGRESS_INTERVAL;
         if (mProgressTimeMs % 1000 == 0) {
             int minutes = mProgressTimeMs / 1000 / 60;

@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-
+@Deprecated
 public class FilterProvider {
 
     private final ArrayList<FilterDes> mFilters = new ArrayList<>();
