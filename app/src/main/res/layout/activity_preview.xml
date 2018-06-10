@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -11,30 +12,32 @@
         android:id="@+id/preview_topbar_music"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:src="@mipmap/preview_topbar_music_icon"
         android:padding="10dp"
-        app:layout_constraintStart_toStartOf="parent"
+        android:src="@mipmap/preview_topbar_music_icon"
         app:layout_constraintEnd_toStartOf="@+id/preview_topbar_chart"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginLeft="50dp"
         />
     <!--贴纸-->
     <ImageView
         android:id="@+id/preview_topbar_chart"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:src="@mipmap/preview_topbar_chart_icon"
         android:padding="10dp"
-        app:layout_constraintStart_toEndOf="@id/preview_topbar_music"
+        android:src="@mipmap/preview_topbar_chart_icon"
         app:layout_constraintEnd_toStartOf="@+id/preview_topbar_effect"
+        app:layout_constraintStart_toEndOf="@id/preview_topbar_music"
         />
     <!--动效-->
     <ImageView
         android:id="@+id/preview_topbar_effect"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        android:src="@mipmap/preview_topbar_effect_icon"
         android:padding="10dp"
+        android:src="@mipmap/preview_topbar_effect_icon"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/preview_topbar_chart"
-        app:layout_constraintEnd_toStartOf="parent"
+        android:layout_marginRight="50dp"
         />
 
     <!--videoview-->

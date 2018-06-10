@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 
 import com.dogcamera.filter.GPUImageAntiqueFilter;
 import com.dogcamera.filter.GPUImageBeautyFilter;
+import com.dogcamera.filter.GPUImageColorInvertFilter;
 import com.dogcamera.filter.GPUImageExtTexFilter;
 import com.dogcamera.filter.GPUImageFilter;
 import com.dogcamera.filter.GPUImageLookupFilter;
@@ -35,6 +36,7 @@ public class FilterProvider {
         mFilters.add(new FilterDes.Builder().setFilterId("F2").setFilterName("新鲜").builder());
         mFilters.add(new FilterDes.Builder().setFilterId("A1").setFilterName("耀光").builder());
         mFilters.add(new FilterDes.Builder().setFilterId("BF").setFilterName("美丽").builder());
+        mFilters.add(new FilterDes.Builder().setFilterId("IV").setFilterName("鬼片").builder());
     }
 
     private FilterDes findFilterDesById(String id){
@@ -49,7 +51,7 @@ public class FilterProvider {
     public GPUImageFilter createFilter(Context context, String id){
         switch (id){
             case "OR":
-                break;
+                return new GPUImageFilter();
             case "F1":
                 GPUImageLookupFilter filterF3 = new GPUImageLookupFilter();
                 FilterDes desF3 = findFilterDesById("F1");
@@ -66,8 +68,10 @@ public class FilterProvider {
                 return new GPUImageAntiqueFilter();
             case "BF":
                 return new GPUImageBeautyFilter();
+            case "IV":
+                return new GPUImageColorInvertFilter();
         }
-        return new GPUImageFilter();
+        return null;
     }
 
     public static class FilterDes {

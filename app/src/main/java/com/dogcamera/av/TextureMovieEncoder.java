@@ -26,6 +26,7 @@ import android.util.Log;
 import com.dogcamera.filter.GPUImageExtTexFilter;
 import com.dogcamera.filter.GPUImageFilter;
 import com.dogcamera.filter.GPUImageFilterGroup;
+import com.dogcamera.utils.FilterUtils;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -316,7 +317,7 @@ public class TextureMovieEncoder implements Runnable {
         mConfig = config;
         mOccurError = false;
         prepareEncoder(config.mEglContext, config.mWidth, config.mHeight,
-                config.mOutputFile);
+                config.mOutputFile, config.mFilterId);
     }
 
     public void setCubeAndTextureBuffer(FloatBuffer cubeBuffer, FloatBuffer textureBuffer) {
@@ -413,13 +414,13 @@ public class TextureMovieEncoder implements Runnable {
 
         // Create new programs and such for the new context.
 
-        initGPUImageFilter(mConfig.mWidth, mConfig.mHeight, null);
+        initGPUImageFilter(mConfig.mWidth, mConfig.mHeight, mConfig.mFilterId);
 
     }
 
 
     private void prepareEncoder(EGLContext sharedContext, int width, int height,
-                                File outputFile) {
+                                File outputFile, String filterId) {
         AndroidMuxer muxer = new AndroidMuxer(outputFile.getPath());
 
         try {
@@ -453,11 +454,11 @@ public class TextureMovieEncoder implements Runnable {
             return;
         }
 
-        initGPUImageFilter(width, height, null);
+        initGPUImageFilter(width, height, filterId);
 
     }
 
-    public void initGPUImageFilter(int w, int h, GPUImageFilter filter) {
+    public void initGPUImageFilter(int w, int h, String filterId) {
         if (mGPUImageFilterGroup != null) {
             mGPUImageFilterGroup.destroy();
             mGPUImageFilterGroup = null;
@@ -467,7 +468,7 @@ public class TextureMovieEncoder implements Runnable {
 
         mGPUImageFilterGroup.addFilter(new GPUImageExtTexFilter());
 
-        mGPUImageFilterGroup.addFilter(filter);
+        mGPUImageFilterGroup.addFilter(FilterUtils.createFilter(filterId));
 
         mGPUImageFilterGroup.init();
 

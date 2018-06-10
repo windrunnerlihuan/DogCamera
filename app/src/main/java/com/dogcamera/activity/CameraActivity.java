@@ -192,6 +192,7 @@ public class CameraActivity extends BaseActivity {
         mRecordView.changeGpuImageFilter(newFilter, id);
     }
 
+    @Deprecated
     private void changeFilter(String id) {
         GPUImageFilter newFilter = mFilterProvider.createFilter(this, id);
         mRecordView.changeGpuImageFilter(newFilter);

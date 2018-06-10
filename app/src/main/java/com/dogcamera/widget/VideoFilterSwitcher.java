@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class VideoFilterSwitcher extends FrameLayout implements ViewPager.OnPageChangeListener {
 
-    private static final String TAG = "VideoFilterSwitcher";
+    private static final String TAG = VideoFilterSwitcher.class.getSimpleName();
 
     private TextView mFilterHintView;
     private ViewPager mFilterDetailView;
@@ -133,7 +133,7 @@ public class VideoFilterSwitcher extends FrameLayout implements ViewPager.OnPage
         mFilterDetailView.setLayoutParams(filterDetailViewParams);
 
         mFilterDetailAdapter.setFilterInfos(filters, showItemCount);
-        mFilterIndex = mFilterDetailAdapter.getCount() / 2 - 1;//select F1
+        mFilterIndex = mFilterDetailAdapter.getCount() / 2 - showItemCount / 2;//select OR
         mFocusedFilterIndex = mFilterIndex + showItemCount / 2;
         mFilterDetailView.setCurrentItem(mFilterIndex);
 
