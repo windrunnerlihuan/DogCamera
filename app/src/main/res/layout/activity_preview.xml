@@ -61,6 +61,8 @@
         app:layout_constraintEnd_toEndOf="@id/preview_videoview"
         app:layout_constraintTop_toTopOf="@+id/preview_videoview"
         app:layout_constraintBottom_toBottomOf="@+id/preview_videoview"
+        app:stroke_color="#FFFFFF"
+        app:stroke_width="8dp"
         android:visibility="gone"
         />
 

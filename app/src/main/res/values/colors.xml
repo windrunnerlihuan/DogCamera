@@ -4,6 +4,10 @@
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
 
+    <color name="light_gray">#FF999999</color>
+
     <color name="record_button_progress_arc">#80ffffff</color>
+
+    <color name="preview_bottom_bg">#1c1c1c</color>
 
 </resources>

@@ -161,6 +161,15 @@ public class PlayView extends BaseGLSurfaceView {
         }
     }
 
+    public void restartVideo(){
+        if(mMediaPlayer != null && mMediaPlayer.isPlaying()){
+            mMediaPlayer.seekTo(0);
+        }else{
+            stopVideo();
+            playVideo();
+        }
+    }
+
     @Override
     public void onResume() {
         super.onResume();

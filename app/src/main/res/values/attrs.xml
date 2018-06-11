@@ -7,5 +7,10 @@
         <attr name="circle_stroke" format="dimension" />
         <attr name="arc_bg_color" format="color" />
     </declare-styleable>
+
+    <declare-styleable name="RectProgressView">
+        <attr name="stroke_color" format="color" />
+        <attr name="stroke_width" format="dimension" />
+    </declare-styleable>
     
 </resources>

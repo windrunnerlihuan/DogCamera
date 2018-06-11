@@ -4,6 +4,7 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -12,6 +13,7 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
+import com.dogcamera.R;
 import com.dogcamera.utils.ViewUtils;
 
 import java.util.LinkedList;
@@ -38,14 +40,14 @@ public class RectProgressView extends View {
 
     public RectProgressView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
-        init();
-    }
-
-    private void init() {
+        TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.RectProgressView);
+        int mStrokeColor = typedArray.getColor(R.styleable.RectProgressView_stroke_color, 0xffffff);
+        float mStrokeWidth = typedArray.getDimension(R.styleable.RectProgressView_stroke_width, 8);
+        typedArray.recycle();
         mPaint = new Paint();
-        mPaint.setColor(Color.parseColor("#FFFFFF"));
+        mPaint.setColor(mStrokeColor);
+        mPaint.setStrokeWidth(mStrokeWidth);
         mPaint.setStyle(Paint.Style.STROKE);
-        mPaint.setStrokeWidth(ViewUtils.dip2px(getContext(), 8));
     }
 
     @Override
