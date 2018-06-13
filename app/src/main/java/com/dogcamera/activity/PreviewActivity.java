@@ -3,7 +3,9 @@ package com.dogcamera.activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -11,7 +13,7 @@ import android.widget.Toast;
 
 import com.dogcamera.R;
 import com.dogcamera.base.BaseActivity;
-import com.dogcamera.utils.ViewUtils;
+import com.dogcamera.fragment.MusicFragment;
 import com.dogcamera.widget.PlayView;
 import com.dogcamera.widget.RectProgressView;
 
@@ -21,6 +23,8 @@ import butterknife.BindView;
 import butterknife.OnClick;
 
 public class PreviewActivity extends BaseActivity {
+
+    private String[] SYMBOLS = new String[]{"NONE", "MUSIC", "CHART", "EFFECT"};
 
     private static final int MSG_PROGRESS_UPDATE = 1;
 
@@ -116,46 +120,80 @@ public class PreviewActivity extends BaseActivity {
         mRectProgressView.setProgress(progress, onProgressEndListener);
     }
 
-    @OnClick(R.id.preview_test)
-    public void test(){
-        if(mRectProgressView.getVisibility() == View.GONE){
-            mRectProgressView.setVisibility(View.VISIBLE);
-        }else{
-            mRectProgressView.setVisibility(View.GONE);
-        }
-        if(testprogress == 0){
-            mHandler.sendEmptyMessage(MSG_PROGRESS_UPDATE);
-        }
-    }
-    @OnClick(R.id.preview_test2)
-    public void test2(){
-        if(mMusicIcon.getVisibility() == View.VISIBLE){
-            mMusicIcon.setVisibility(View.GONE);
-            mChartIcon.setVisibility(View.GONE);
-            mEffectIcon.setVisibility(View.GONE);
-        }else{
+
+    private void showTopSelectFragment(String tag){
+        if(SYMBOLS[0].equals(tag)){
             mMusicIcon.setVisibility(View.VISIBLE);
             mChartIcon.setVisibility(View.VISIBLE);
             mEffectIcon.setVisibility(View.VISIBLE);
+            mBottomContainer.setVisibility(View.GONE);
+            return;
         }
-    }
-
-    @OnClick(R.id.preview_finish)
-    public void finishPreview(){
-        mBottomContainer.setVisibility(View.VISIBLE);
-
         mMusicIcon.setVisibility(View.GONE);
         mChartIcon.setVisibility(View.GONE);
         mEffectIcon.setVisibility(View.GONE);
+        mBottomContainer.setVisibility(View.VISIBLE);
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment target = fm.findFragmentByTag(tag);
+        if(target != null && target.isAdded() && !target.isHidden()){
+            return;
+        }
+        FragmentTransaction ft = fm.beginTransaction();
+        for(String t : SYMBOLS){
+            Fragment f = fm.findFragmentByTag(t);
+            if(!t.equals(tag) && f != null && f.isAdded() && !f.isHidden()){
+                ft.hide(f);
+            }
+        }
+        if(target == null){
+            String t = null;
+            if(SYMBOLS[1].equals(tag)){
+                t = SYMBOLS[1];
+                target = new MusicFragment();
+            }else if(SYMBOLS[2].equals(tag)){
+                t = SYMBOLS[2];
+                //TODO
+
+            }else if(SYMBOLS[3].equals(tag)){
+                t = SYMBOLS[3];
+                //TODO
+            }
+            if(target != null){
+                ft.add(R.id.preview_bottom_container, target, t);
+            }
+        }
+        if(target != null && target.isHidden()){
+            ft.show(target);
+        }
+        ft.commitAllowingStateLoss();
+    }
+
+    @OnClick(R.id.preview_root_layout)
+    void onRootClick(){
+        showTopSelectFragment(SYMBOLS[0]);
+    }
+
+    @OnClick(R.id.preview_topbar_music)
+    void onMusicClick(){
+        showTopSelectFragment(SYMBOLS[1]);
+    }
+    @OnClick(R.id.preview_topbar_chart)
+    void onChartClick(){
+        showTopSelectFragment(SYMBOLS[2]);
+    }
+    @OnClick(R.id.preview_topbar_effect)
+    void onEffectClick(){
+        showTopSelectFragment(SYMBOLS[3]);
+    }
+
+    @OnClick(R.id.preview_finish)
+    void onFinishClick(){
+
     }
 
     @OnClick(R.id.preview_back)
-    public void backToRecord(){
-        mBottomContainer.setVisibility(View.GONE);
+    void onBackClick(){
 
-        mMusicIcon.setVisibility(View.VISIBLE);
-        mChartIcon.setVisibility(View.VISIBLE);
-        mEffectIcon.setVisibility(View.VISIBLE);
     }
 
 }

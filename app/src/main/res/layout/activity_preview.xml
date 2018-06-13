@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/preview_root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/preview_root_layout">
+    >
 
     <!--顶部三个按钮-->
     <!--音乐-->
@@ -12,12 +13,11 @@
         android:id="@+id/preview_topbar_music"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_marginLeft="50dp"
         android:padding="10dp"
         android:src="@mipmap/preview_topbar_music_icon"
         app:layout_constraintEnd_toStartOf="@+id/preview_topbar_chart"
-        app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginLeft="50dp"
-        />
+        app:layout_constraintStart_toStartOf="parent" />
     <!--贴纸-->
     <ImageView
         android:id="@+id/preview_topbar_chart"
@@ -26,88 +26,71 @@
         android:padding="10dp"
         android:src="@mipmap/preview_topbar_chart_icon"
         app:layout_constraintEnd_toStartOf="@+id/preview_topbar_effect"
-        app:layout_constraintStart_toEndOf="@id/preview_topbar_music"
-        />
+        app:layout_constraintStart_toEndOf="@id/preview_topbar_music" />
     <!--动效-->
     <ImageView
         android:id="@+id/preview_topbar_effect"
         android:layout_width="50dp"
         android:layout_height="50dp"
+        android:layout_marginRight="50dp"
         android:padding="10dp"
         android:src="@mipmap/preview_topbar_effect_icon"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/preview_topbar_chart"
-        android:layout_marginRight="50dp"
-        />
+        app:layout_constraintStart_toEndOf="@id/preview_topbar_chart" />
 
     <!--videoview-->
     <com.dogcamera.widget.PlayView
         android:id="@+id/preview_videoview"
         android:layout_width="wrap_content"
         android:layout_height="0dp"
-        app:layout_constraintTop_toBottomOf="@id/preview_topbar_music"
         app:layout_constraintBottom_toTopOf="@+id/preview_bottom_container"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_goneMarginBottom="200dp"
-        />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/preview_topbar_music"
+        app:layout_goneMarginBottom="200dp" />
 
     <!--方形进度条-->
     <com.dogcamera.widget.RectProgressView
         android:id="@+id/preview_rect_progress"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintStart_toStartOf="@id/preview_videoview"
-        app:layout_constraintEnd_toEndOf="@id/preview_videoview"
-        app:layout_constraintTop_toTopOf="@+id/preview_videoview"
-        app:layout_constraintBottom_toBottomOf="@+id/preview_videoview"
-        app:stroke_color="#FFFFFF"
-        app:stroke_width="8dp"
         android:visibility="gone"
-        />
+        app:layout_constraintBottom_toBottomOf="@+id/preview_videoview"
+        app:layout_constraintEnd_toEndOf="@id/preview_videoview"
+        app:layout_constraintStart_toStartOf="@id/preview_videoview"
+        app:layout_constraintTop_toTopOf="@+id/preview_videoview"
+        app:stroke_color="#FFFFFF"
+        app:stroke_width="8dp" />
+
+
+    <!--结束按钮-->
+    <ImageView
+        android:id="@+id/preview_finish"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:src="@mipmap/preview_finish"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/preview_videoview" />
+    <!--后退按钮-->
+    <ImageView
+        android:id="@+id/preview_back"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:src="@mipmap/preview_back"
+        app:layout_constraintBottom_toBottomOf="@+id/preview_finish"
+        app:layout_constraintEnd_toStartOf="@id/preview_finish"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/preview_finish" />
 
     <!--编辑布局-->
     <FrameLayout
         android:id="@+id/preview_bottom_container"
         android:layout_width="match_parent"
         android:layout_height="250dp"
-        app:layout_constraintBottom_toBottomOf="parent"
         android:visibility="gone"
-        >
-        <Button
-            android:id="@+id/preview_test"
-            android:layout_gravity="center"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="测试"/>
-
-        <Button
-            android:id="@+id/preview_test2"
-            android:layout_gravity="center_vertical"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="测试2"/>
-    </FrameLayout>
-
-    <ImageView
-        android:id="@+id/preview_finish"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
-        android:src="@mipmap/preview_finish"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/preview_videoview"
-        app:layout_constraintBottom_toBottomOf="parent"/>
-
-    <ImageView
-        android:id="@+id/preview_back"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
-        android:src="@mipmap/preview_back"
-        app:layout_constraintTop_toTopOf="@+id/preview_finish"
-        app:layout_constraintBottom_toBottomOf="@+id/preview_finish"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/preview_finish"
+        app:layout_constraintBottom_toBottomOf="parent"
         />
 
 </android.support.constraint.ConstraintLayout>
