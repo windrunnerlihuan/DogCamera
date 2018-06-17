@@ -1,39 +1,60 @@
 package com.dogcamera.utils;
 
-import com.dogcamera.R;
+import android.content.res.AssetFileDescriptor;
+import android.media.MediaPlayer;
+import android.text.TextUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.dogcamera.DogApplication;
+
+import java.io.IOException;
 
 public class AudioProvider {
 
-    public static List<AudioItem> createAudioItems(){
-        return new ArrayList<AudioItem>(){
-            {
-                add(new AudioItem("无配乐", "无配乐", R.mipmap.preview_bottom_origin_off, R.mipmap.preview_bottom_origin_on));
-                add(new AudioItem("无配乐", "无配乐", R.mipmap.preview_bottom_origin_off, R.mipmap.preview_bottom_origin_on));
-                add(new AudioItem("无配乐", "无配乐", R.mipmap.preview_bottom_origin_off, R.mipmap.preview_bottom_origin_on));
-                add(new AudioItem("无配乐", "无配乐", R.mipmap.preview_bottom_origin_off, R.mipmap.preview_bottom_origin_on));
-                add(new AudioItem("无配乐", "无配乐", R.mipmap.preview_bottom_origin_off, R.mipmap.preview_bottom_origin_on));
-                add(new AudioItem("无配乐", "无配乐", R.mipmap.preview_bottom_origin_off, R.mipmap.preview_bottom_origin_on));
-                add(new AudioItem("无配乐", "无配乐", R.mipmap.preview_bottom_origin_off, R.mipmap.preview_bottom_origin_on));
+    private MediaPlayer mMediaPlayer;
+    private String mCurrentPath;
+
+    public void startPlay(String path) {
+        if (mMediaPlayer == null) {
+            mMediaPlayer = new MediaPlayer();
+        }
+        stopPlay();
+        if(!TextUtils.isEmpty(path)){
+            try {
+                AssetFileDescriptor afd = DogApplication.getInstance().getAssets().openFd(path);
+                mMediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                mMediaPlayer.setLooping(true);
+                mMediaPlayer.prepare();
+                mMediaPlayer.start();
+                mCurrentPath = path;
+            }catch (IOException e){
+                e.printStackTrace();
             }
-        };
-    }
-
-    public static class AudioItem {
-        public String usStr;
-        public String sStr;
-        public int usImg;
-        public int sImg;
-
-        AudioItem(String usStr, String sStr, int usImg, int sImg){
-            this.usStr = usStr;
-            this.sStr = sStr;
-            this.usImg = usImg;
-            this.sImg = sImg;
         }
 
+
+    }
+
+    public void stopPlay() {
+        if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+        }
+        mCurrentPath = null;
+    }
+
+    public void restartPlay(){
+        if(mMediaPlayer != null && mMediaPlayer.isPlaying() && mCurrentPath != null){
+            mMediaPlayer.seekTo(0);
+            mMediaPlayer.start();
+        }
+    }
+
+    public void exitPlay(){
+        stopPlay();
+        if(mMediaPlayer != null){
+            mMediaPlayer.release();
+            mMediaPlayer = null;
+        }
     }
 
 }

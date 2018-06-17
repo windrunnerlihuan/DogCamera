@@ -3,7 +3,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/preview_bottom_bg"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:clickable="true">
 
     <TextView
         android:id="@+id/preview_bottom_music_tv"
@@ -37,8 +38,9 @@
         app:layout_constraintTop_toTopOf="@id/preview_bottom_music_tv"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        android:layout_marginLeft="22dp"
-        android:layout_marginRight="22dp"
+        app:layout_constraintEnd_toStartOf="@+id/preview_bottom_music_divider"
+        android:layout_marginLeft="@dimen/preview_music_recycler_item_divider"
+        android:layout_marginRight="@dimen/preview_music_recycler_item_divider"
         />
 
     <View
@@ -47,6 +49,7 @@
         android:layout_height="30dp"
         android:background="#b2666666"
         app:layout_constraintStart_toEndOf="@id/preview_bottom_music_origin"
+        app:layout_constraintEnd_toStartOf="@+id/preview_bottom_music_list"
         app:layout_constraintTop_toTopOf="@id/preview_bottom_music_tv"
         app:layout_constraintBottom_toBottomOf="parent"
         />
@@ -57,8 +60,9 @@
         android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="@id/preview_bottom_music_tv"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="@id/preview_bottom_music_divider"
+        app:layout_constraintStart_toEndOf="@id/preview_bottom_music_divider"
         app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginLeft="@dimen/preview_music_recycler_item_divider"
         />
 
 </android.support.constraint.ConstraintLayout>

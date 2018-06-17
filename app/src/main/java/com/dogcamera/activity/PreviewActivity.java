@@ -14,10 +14,13 @@ import android.widget.Toast;
 import com.dogcamera.R;
 import com.dogcamera.base.BaseActivity;
 import com.dogcamera.fragment.MusicFragment;
+import com.dogcamera.module.PreviewRestartParams;
 import com.dogcamera.widget.PlayView;
 import com.dogcamera.widget.RectProgressView;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.OnClick;
@@ -50,6 +53,8 @@ public class PreviewActivity extends BaseActivity {
 
     public float testprogress = 0;
 
+    private List<PreviewRestartParams.PreviewRestartListener> mRestartListener;
+
     private class ProgressHandler extends Handler {
 
         private WeakReference<PreviewActivity> mContextRef;
@@ -57,16 +62,17 @@ public class PreviewActivity extends BaseActivity {
         public ProgressHandler(PreviewActivity context) {
             mContextRef = new WeakReference<>(context);
         }
+
         @Override
         public void handleMessage(Message msg) {
             if (mContextRef.get() == null)
                 return;
             PreviewActivity activity = mContextRef.get();
-            switch (msg.what){
+            switch (msg.what) {
                 case MSG_PROGRESS_UPDATE:
 
 
-                    if(testprogress >= 1){
+                    if (testprogress >= 1) {
                         activity.updateProgressUI(1f, new RectProgressView.OnProgressEndListener() {
                             @Override
                             public void onProgressEnd() {
@@ -97,10 +103,17 @@ public class PreviewActivity extends BaseActivity {
 
         mVideoView.setLooping(true);
         mVideoView.setPlayVideoPath(mPlayUri);
+        mVideoView.setOnPlayStatusListener(new PlayView.OnPlayStatusListenerAdapter(){
+            @Override
+            public void onCompletion() {
+                restartPlay(new PreviewRestartParams.Builder().setIsNotify(true).build());
+            }
+        });
     }
 
     private void initValues() {
         mHandler = new ProgressHandler(this);
+        mRestartListener = new ArrayList<>();
         mPlayUri = getIntent().getStringExtra("uri");
     }
 
@@ -116,13 +129,13 @@ public class PreviewActivity extends BaseActivity {
         mVideoView.onPause();
     }
 
-    private void updateProgressUI(float progress, RectProgressView.OnProgressEndListener onProgressEndListener){
+    private void updateProgressUI(float progress, RectProgressView.OnProgressEndListener onProgressEndListener) {
         mRectProgressView.setProgress(progress, onProgressEndListener);
     }
 
 
-    private void showTopSelectFragment(String tag){
-        if(SYMBOLS[0].equals(tag)){
+    private void showTopSelectFragment(String tag) {
+        if (SYMBOLS[0].equals(tag)) {
             mMusicIcon.setVisibility(View.VISIBLE);
             mChartIcon.setVisibility(View.VISIBLE);
             mEffectIcon.setVisibility(View.VISIBLE);
@@ -135,64 +148,85 @@ public class PreviewActivity extends BaseActivity {
         mBottomContainer.setVisibility(View.VISIBLE);
         FragmentManager fm = getSupportFragmentManager();
         Fragment target = fm.findFragmentByTag(tag);
-        if(target != null && target.isAdded() && !target.isHidden()){
+        if (target != null && target.isAdded() && !target.isHidden()) {
             return;
         }
         FragmentTransaction ft = fm.beginTransaction();
-        for(String t : SYMBOLS){
+        for (String t : SYMBOLS) {
             Fragment f = fm.findFragmentByTag(t);
-            if(!t.equals(tag) && f != null && f.isAdded() && !f.isHidden()){
+            if (!t.equals(tag) && f != null && f.isAdded() && !f.isHidden()) {
                 ft.hide(f);
             }
         }
-        if(target == null){
+        if (target == null) {
             String t = null;
-            if(SYMBOLS[1].equals(tag)){
+            if (SYMBOLS[1].equals(tag)) {
                 t = SYMBOLS[1];
                 target = new MusicFragment();
-            }else if(SYMBOLS[2].equals(tag)){
+            } else if (SYMBOLS[2].equals(tag)) {
                 t = SYMBOLS[2];
                 //TODO
 
-            }else if(SYMBOLS[3].equals(tag)){
+            } else if (SYMBOLS[3].equals(tag)) {
                 t = SYMBOLS[3];
                 //TODO
             }
-            if(target != null){
+            if (target != null) {
                 ft.add(R.id.preview_bottom_container, target, t);
+                if (target instanceof PreviewRestartParams.PreviewRestartListener) {
+                    mRestartListener.add((PreviewRestartParams.PreviewRestartListener) target);
+                }
             }
         }
-        if(target != null && target.isHidden()){
+        if (target != null && target.isHidden()) {
             ft.show(target);
         }
         ft.commitAllowingStateLoss();
     }
 
+    public void restartPlay(PreviewRestartParams p) {
+        if(p != null){
+            if(p.isMute != null){
+                mVideoView.setMute(p.isMute);
+            }
+            if(p.isNotify != null && p.isNotify){
+                for (PreviewRestartParams.PreviewRestartListener l : mRestartListener) {
+                    l.onPreviewRestart();
+                }
+            }
+        }
+        mVideoView.restartPlay();
+    }
+
     @OnClick(R.id.preview_root_layout)
-    void onRootClick(){
+    void onRootClick() {
         showTopSelectFragment(SYMBOLS[0]);
     }
 
     @OnClick(R.id.preview_topbar_music)
-    void onMusicClick(){
+    void onMusicClick() {
         showTopSelectFragment(SYMBOLS[1]);
     }
+
     @OnClick(R.id.preview_topbar_chart)
-    void onChartClick(){
-        showTopSelectFragment(SYMBOLS[2]);
+    void onChartClick() {
+//        showTopSelectFragment(SYMBOLS[2]);
+        Toast.makeText(this, "贴纸施工中-.-", Toast.LENGTH_SHORT).show();
     }
+
     @OnClick(R.id.preview_topbar_effect)
-    void onEffectClick(){
-        showTopSelectFragment(SYMBOLS[3]);
+    void onEffectClick() {
+//        showTopSelectFragment(SYMBOLS[3]);
+        Toast.makeText(this, "特效施工中-.-", Toast.LENGTH_SHORT).show();
     }
 
     @OnClick(R.id.preview_finish)
-    void onFinishClick(){
+    void onFinishClick() {
 
     }
 
     @OnClick(R.id.preview_back)
-    void onBackClick(){
+    void onBackClick() {
 
     }
 

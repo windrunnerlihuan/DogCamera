@@ -4,18 +4,18 @@ import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.view.ViewGroup;
 import com.dogcamera.base.BaseRecyclerViewAdapter;
-import com.dogcamera.utils.AudioProvider;
+import com.dogcamera.utils.AudioUtils;
 import com.dogcamera.widget.AudioItemView;
 
 import java.util.List;
 
 public class MusicListAdapter extends BaseRecyclerViewAdapter<MusicListAdapter.MLViewHolder> {
 
-    private List<AudioProvider.AudioItem> mList;
+    private List<AudioUtils.AudioItem> mList;
 
-    private int mLastPosition = -1;
+    private int mLastPosition = 0;
 
-    public MusicListAdapter(List<AudioProvider.AudioItem> list){
+    public MusicListAdapter(List<AudioUtils.AudioItem> list){
         mList = list;
     }
 
@@ -43,7 +43,7 @@ public class MusicListAdapter extends BaseRecyclerViewAdapter<MusicListAdapter.M
         if(mList == null || mList.size() == 0){
             return;
         }
-        AudioProvider.AudioItem item = mList.get(position);
+        AudioUtils.AudioItem item = mList.get(position);
         holder.mRoot.setImg(item.usImg, item.sImg);
         holder.mRoot.setTv(item.usStr, item.sStr);
         if(position == mLastPosition){

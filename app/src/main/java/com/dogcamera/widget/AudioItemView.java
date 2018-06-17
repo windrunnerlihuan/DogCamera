@@ -23,6 +23,8 @@ public class AudioItemView extends LinearLayout implements View.OnClickListener{
 
     private boolean mSelected;
 
+    private OnItemClickListener mListener;
+
     public AudioItemView(Context context) {
         this(context, null);
     }
@@ -37,13 +39,16 @@ public class AudioItemView extends LinearLayout implements View.OnClickListener{
         setOrientation(LinearLayout.VERTICAL);
         setGravity(Gravity.CENTER);
         mIcon = new ImageView(getContext());
-        LayoutParams iconLp = new LayoutParams(ViewUtils.dip2px(getContext(), 55), ViewUtils.dip2px(getContext(), 55));
+        LayoutParams iconLp = new LayoutParams(ViewUtils.dip2px(getContext(), 40), ViewUtils.dip2px(getContext(), 40));
         mIcon.setLayoutParams(iconLp);
+        mIcon.setPadding(ViewUtils.dip2px(getContext(), 3), ViewUtils.dip2px(getContext(), 3),
+                ViewUtils.dip2px(getContext(), 3), ViewUtils.dip2px(getContext(), 3));
         addView(mIcon);
         mTv = new TextView(getContext());
         mTv.setTextSize(10);
         mTv.setTextColor(mSelected ? Color.WHITE : getResources().getColor(R.color.light_gray));
         LayoutParams tvLp = new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT);
+        tvLp.topMargin = ViewUtils.dip2px(getContext(), 10);
         mTv.setLayoutParams(tvLp);
         addView(mTv);
         setOnClickListener(this);
@@ -86,6 +91,16 @@ public class AudioItemView extends LinearLayout implements View.OnClickListener{
     public void onClick(View v) {
         setSelected(!mSelected);
         //TODO
+        if(mListener != null){
+            mListener.onItemClick(mSelected);
+        }
+    }
 
+    public void setOnItemClickListener(OnItemClickListener l){
+        mListener = l;
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(boolean afteSselected);
     }
 }

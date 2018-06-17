@@ -76,8 +76,8 @@
     <!--后退按钮-->
     <ImageView
         android:id="@+id/preview_back"
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
         android:src="@mipmap/preview_back"
         app:layout_constraintBottom_toBottomOf="@+id/preview_finish"
         app:layout_constraintEnd_toStartOf="@id/preview_finish"

@@ -27,6 +27,8 @@ public class PlayView extends BaseGLSurfaceView {
 
     private MediaPlayer mMediaPlayer;
 
+    private OnPlayerStatusListener mListener;
+
     public PlayView(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -76,7 +78,7 @@ public class PlayView extends BaseGLSurfaceView {
     @Override
     protected void onSurfaceInit() {
         adjustSurfaceSize();
-        playVideo();
+        startPlay();
     }
 
     private void adjustSurfaceSize() {
@@ -111,6 +113,8 @@ public class PlayView extends BaseGLSurfaceView {
     }
 
     public void setMute(boolean mute) {
+        if(mMute == mute)
+            return;
         mMute = mute;
         if (mMediaPlayer != null) {
             if (mute) {
@@ -121,7 +125,7 @@ public class PlayView extends BaseGLSurfaceView {
         }
     }
 
-    public void playVideo(){
+    public void startPlay(){
         if (TextUtils.isEmpty(mPlayVideoPath)) {
             return;
         }
@@ -135,6 +139,10 @@ public class PlayView extends BaseGLSurfaceView {
                     mMediaPlayer.seekTo(0);
                     mMediaPlayer.start();
                 }
+                if(mListener != null){
+                    mListener.onCompletion();
+                }
+
             });
             mMediaPlayer.setOnPreparedListener(mp -> mMediaPlayer.start());
             mMediaPlayer.setOnErrorListener((mp, what, extra) -> false);
@@ -154,20 +162,24 @@ public class PlayView extends BaseGLSurfaceView {
 
     }
 
-    public void stopVideo(){
+    public void stopPlay(){
         if(mMediaPlayer != null){
             mMediaPlayer.pause();
             mMediaPlayer.stop();
         }
     }
 
-    public void restartVideo(){
+    public void restartPlay(){
         if(mMediaPlayer != null && mMediaPlayer.isPlaying()){
             mMediaPlayer.seekTo(0);
         }else{
-            stopVideo();
-            playVideo();
+            stopPlay();
+            startPlay();
         }
+    }
+
+    public void setOnPlayStatusListener(OnPlayerStatusListener listener){
+        mListener = listener;
     }
 
     @Override
@@ -178,7 +190,7 @@ public class PlayView extends BaseGLSurfaceView {
     @Override
     public void onPause() {
         super.onPause();
-        stopVideo();
+        stopPlay();
     }
 
     @Override
@@ -189,6 +201,19 @@ public class PlayView extends BaseGLSurfaceView {
     @Override
     protected int getVideoHeight() {
         return mVideoHeight;
+    }
+
+    public interface OnPlayerStatusListener {
+        void onCompletion();
+        //需要哪个可以继续加
+
+    }
+
+    public static class OnPlayStatusListenerAdapter implements OnPlayerStatusListener {
+        @Override
+        public void onCompletion() {
+
+        }
     }
 
 }
