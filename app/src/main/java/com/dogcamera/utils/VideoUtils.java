@@ -1,19 +1,28 @@
 package com.dogcamera.utils;
 
 
+import android.annotation.SuppressLint;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.Log;
+
+import com.dogcamera.transcode.MediaTranscoder;
+import com.dogcamera.transcode.engine.MediaTranscoderEngine;
+import com.dogcamera.transcode.format.MediaFormatStrategy;
+import com.dogcamera.transcode.format.MediaFormatStrategyPresets;
+import com.dogcamera.transcode.utils.VideoDimensionCompat;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.Future;
 
 /**
  * Created by huanli on 2018/2/28.
@@ -169,6 +178,27 @@ public class VideoUtils {
             }
         }
         return -1;
+    }
+
+    @SuppressLint("NewApi")
+    public static void transcodeAddFilter(String srcPath, String dstPath, MediaTranscoder.Listener listener){
+        MediaFormatStrategy strategy = null;
+        if(!TextUtils.isEmpty(Build.MODEL)){
+            for(String brand : VideoDimensionCompat.HONOR6_BRANDS){
+                if(Build.MODEL.contains(brand)){
+                    strategy = MediaFormatStrategyPresets.createExportPreset640x360Strategy();
+                    break;
+                }
+            }
+        }
+        if(strategy == null){
+            strategy = MediaFormatStrategyPresets.createExportPreset1280x720Strategy();
+        }
+        try {
+             MediaTranscoder.getInstance().transcodeVideoSync(srcPath, dstPath, strategy, listener);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 }

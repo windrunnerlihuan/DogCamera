@@ -84,6 +84,11 @@ public class MusicFragment extends BaseFragment implements PreviewRestartParams.
         mAudioProvider.restartPlay();
     }
 
+    @Override
+    public void onPreviewStop() {
+        mAudioProvider.stopPlay();
+    }
+
     private void sendToRestart(PreviewRestartParams params){
         if(getActivity() != null && getActivity() instanceof PreviewActivity){
             PreviewActivity activity = (PreviewActivity) getActivity();

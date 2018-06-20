@@ -34,5 +34,6 @@ public class PreviewRestartParams {
 
     public interface PreviewRestartListener {
         void onPreviewRestart();
+        void onPreviewStop();
     }
 }

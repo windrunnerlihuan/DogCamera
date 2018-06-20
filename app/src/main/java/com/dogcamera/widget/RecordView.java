@@ -13,6 +13,7 @@ import com.dogcamera.av.EncoderConfig;
 import com.dogcamera.av.Rotation;
 import com.dogcamera.av.TextureMovieEncoder;
 import com.dogcamera.filter.GPUImageFilter;
+import com.dogcamera.transcode.utils.VideoDimensionCompat;
 import com.dogcamera.utils.CameraUtils;
 
 import java.io.File;
@@ -101,7 +102,7 @@ public class RecordView extends BaseGLSurfaceView {
             int degrees = CameraUtils.getCameraDisplayOrientation((Activity)getContext(), cameraId);
             Log.e(TAG, "摄像头旋转" + degrees + "度");
             //Nexus 5X 机器的摄像头装反了
-            if ("Nexus 5X".equals(Build.MODEL)) {
+            if (VideoDimensionCompat.NEXUS_5X.equals(Build.MODEL)) {
                 degrees = 360 - degrees;
             }
             params.setRotation(degrees);

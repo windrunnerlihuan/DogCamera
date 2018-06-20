@@ -6,18 +6,23 @@ import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.dogcamera.R;
+import com.dogcamera.av.RecordConstant;
 import com.dogcamera.base.BaseActivity;
 import com.dogcamera.fragment.MusicFragment;
 import com.dogcamera.module.PreviewRestartParams;
+import com.dogcamera.transcode.MediaTranscoder;
+import com.dogcamera.utils.VideoUtils;
 import com.dogcamera.widget.PlayView;
 import com.dogcamera.widget.RectProgressView;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -198,6 +203,40 @@ public class PreviewActivity extends BaseActivity {
         mVideoView.restartPlay();
     }
 
+    private void finishPreview(){
+        mVideoView.stopPlay();
+        for (PreviewRestartParams.PreviewRestartListener l : mRestartListener) {
+            l.onPreviewStop();
+        }
+        new Thread(){
+            @Override
+            public void run() {
+                String outpath = RecordConstant.RECORD_DIR + File.separator + "transcode" + System.currentTimeMillis() + ".mp4";
+                VideoUtils.transcodeAddFilter(mPlayUri, outpath, new MediaTranscoder.Listener() {
+                    @Override
+                    public void onTranscodeProgress(double progress) {
+
+                    }
+
+                    @Override
+                    public void onTranscodeCompleted() {
+                        Log.e(TAG, "onTranscodeCompleted");
+                    }
+
+                    @Override
+                    public void onTranscodeCanceled() {
+
+                    }
+
+                    @Override
+                    public void onTranscodeFailed(Exception exception) {
+                        Log.e(TAG, "onTranscodeCompleted");
+                    }
+                });
+            }
+        }.start();
+    }
+
     @OnClick(R.id.preview_root_layout)
     void onRootClick() {
         showTopSelectFragment(SYMBOLS[0]);
@@ -222,7 +261,7 @@ public class PreviewActivity extends BaseActivity {
 
     @OnClick(R.id.preview_finish)
     void onFinishClick() {
-
+        finishPreview();
     }
 
     @OnClick(R.id.preview_back)

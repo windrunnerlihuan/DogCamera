@@ -164,8 +164,8 @@ public class PlayView extends BaseGLSurfaceView {
 
     public void stopPlay(){
         if(mMediaPlayer != null){
-            mMediaPlayer.pause();
             mMediaPlayer.stop();
+            mMediaPlayer.reset();
         }
     }
 
