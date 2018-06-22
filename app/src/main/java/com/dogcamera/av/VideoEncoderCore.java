@@ -43,8 +43,8 @@ public class VideoEncoderCore extends MediaEncoderCore {
 
     private static final String MIME_TYPE = "video/avc";    // H.264 Advanced Video Coding
     private static final int FRAME_RATE = 30;               // 30fps
-    private static final int IFRAME_INTERVAL = 5;           // 5 seconds between I-frames
-    private static final int BIT_RATE = 3000 * 1024;
+    private static final int IFRAME_INTERVAL = 1;           // 1 seconds between I-frames
+    private static final int BIT_RATE = 3 * 1024 * 1024;
 
     private Surface mInputSurface;
 
@@ -53,17 +53,8 @@ public class VideoEncoderCore extends MediaEncoderCore {
      */
     public VideoEncoderCore(AndroidMuxer muxer, int width, int height) {
         super(muxer);
-
         prepareEncoder(width, height);
 
-        // Create a MediaMuxer.  We can't add the video track and start() the muxer here,
-        // because our MediaFormat doesn't have the Magic Goodies.  These can only be
-        // obtained from the encoder after it has started processing data.
-        //
-        // We're not actually interested in multiplexing audio.  We just want to convert
-        // the raw H.264 elementary stream we get from MediaCodec into a .mp4 file.
-//        mMuxer = new MediaMuxer(outputFile.toString(),
-//                MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
     }
 
     @TargetApi(18)

@@ -240,10 +240,10 @@ public class TextureMovieEncoder implements Runnable {
         }
         Looper.loop();
 
-//        synchronized (mReadyFence) {
-//            mReady = mRunning = false;
-//            mHandler = null;
-//        }
+        synchronized (mReadyFence) {
+            mReady = mRunning = false;
+            mHandler = null;
+        }
         Log.d(TAG, "Encoder thread exiting");
     }
 
@@ -316,8 +316,7 @@ public class TextureMovieEncoder implements Runnable {
         Log.d(TAG, "handleStartRecording " + config);
         mConfig = config;
         mOccurError = false;
-        prepareEncoder(config.mEglContext, config.mWidth, config.mHeight,
-                config.mOutputFile, config.mFilterId);
+        prepareEncoder(config);
     }
 
     public void setCubeAndTextureBuffer(FloatBuffer cubeBuffer, FloatBuffer textureBuffer) {
@@ -419,12 +418,11 @@ public class TextureMovieEncoder implements Runnable {
     }
 
 
-    private void prepareEncoder(EGLContext sharedContext, int width, int height,
-                                File outputFile, String filterId) {
-        AndroidMuxer muxer = new AndroidMuxer(outputFile.getPath());
+    private void prepareEncoder(EncoderConfig config) {
+        AndroidMuxer muxer = new AndroidMuxer(config.mOutputFile.getPath());
 
         try {
-            mVideoEncoder = new VideoEncoderCore(muxer, width, height);
+            mVideoEncoder = new VideoEncoderCore(muxer, config.mWidth, config.mHeight);
             if (mRecordSpeed == 1 && mRecordAudio) {
                 mAudioEncoder = new AudioEncoderCore(muxer);
                 muxer.setExpectedNumTracks(2);
@@ -441,7 +439,7 @@ public class TextureMovieEncoder implements Runnable {
             return;
         }
 
-        mEglCore = new EglCore(sharedContext, EglCore.FLAG_RECORDABLE);
+        mEglCore = new EglCore(config.mEglContext, EglCore.FLAG_RECORDABLE);
 
         try {
             mInputWindowSurface = new WindowSurface(mEglCore, mVideoEncoder.getInputSurface(), true);
@@ -454,7 +452,7 @@ public class TextureMovieEncoder implements Runnable {
             return;
         }
 
-        initGPUImageFilter(width, height, filterId);
+        initGPUImageFilter(config.mWidth, config.mHeight, config.mFilterId);
 
     }
 

@@ -53,12 +53,20 @@ public class VideoTrackTranscoder implements TrackTranscoder {
     private boolean mEncoderStarted;
     private long mWrittenPresentationTimeUs;
 
+    private TextureRenderConfig mTextureRenderConfig;
+
     public VideoTrackTranscoder(MediaExtractor extractor, int trackIndex,
                                 MediaFormat outputFormat, QueuedMuxer muxer) {
         mExtractor = extractor;
         mTrackIndex = trackIndex;
         mOutputFormat = outputFormat;
         mMuxer = muxer;
+    }
+    /**
+     *  设置水印、滤镜等等
+     */
+    public void setRenderConfig(TextureRenderConfig config){
+        mTextureRenderConfig = config;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -84,7 +92,16 @@ public class VideoTrackTranscoder implements TrackTranscoder {
             // refer: https://android.googlesource.com/platform/frameworks/av/+blame/lollipop-release/media/libstagefright/Utils.cpp
             inputFormat.setInteger(MediaFormatExtraConstants.KEY_ROTATION_DEGREES, 0);
         }
-        mDecoderOutputSurfaceWrapper = new OutputSurface();
+        //设置视频图像宽高，使得后续GPUImageFilter初始化
+        if(mTextureRenderConfig != null){
+            if(mTextureRenderConfig.outputVideoWidth <= 0 || mTextureRenderConfig.outputVideoHeight <= 0){
+                mTextureRenderConfig.outputVideoWidth = mOutputFormat.getInteger(MediaFormat.KEY_WIDTH);
+                mTextureRenderConfig.outputVideoHeight = mOutputFormat.getInteger(MediaFormat.KEY_HEIGHT);
+            }
+            mDecoderOutputSurfaceWrapper = new OutputSurface(mTextureRenderConfig);
+        }else{
+            mDecoderOutputSurfaceWrapper = new OutputSurface();
+        }
         try {
             mDecoder = MediaCodec.createDecoderByType(inputFormat.getString(MediaFormat.KEY_MIME));
         } catch (IOException e) {

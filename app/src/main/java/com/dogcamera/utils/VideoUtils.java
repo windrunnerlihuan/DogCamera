@@ -13,6 +13,7 @@ import android.util.Log;
 
 import com.dogcamera.transcode.MediaTranscoder;
 import com.dogcamera.transcode.engine.MediaTranscoderEngine;
+import com.dogcamera.transcode.engine.TextureRenderConfig;
 import com.dogcamera.transcode.format.MediaFormatStrategy;
 import com.dogcamera.transcode.format.MediaFormatStrategyPresets;
 import com.dogcamera.transcode.utils.VideoDimensionCompat;
@@ -158,7 +159,9 @@ public class VideoUtils {
             }
             //记录当前文件的最后一个pts，作为下一个文件的pts offset
             //前一个文件的最后一帧与后一个文件的第一帧，差10ms，只是估计值，不准确，但能用
-            ptsOffset = Math.max(videoPtsOffsetTmp, audioPtsOffsetTmp) + 10000L;
+            if(mediaIterator.hasNext()){
+                ptsOffset = Math.max(videoPtsOffsetTmp, audioPtsOffsetTmp) + 10000L;
+            }
 
             mediaExtractor.release();
 
@@ -180,22 +183,16 @@ public class VideoUtils {
         return -1;
     }
 
+    /**
+     * 转码并添加滤镜，一些机型转换成1280x720的视频可能会有花屏、绿屏，需要做适配
+     */
     @SuppressLint("NewApi")
-    public static void transcodeAddFilter(String srcPath, String dstPath, MediaTranscoder.Listener listener){
-        MediaFormatStrategy strategy = null;
-        if(!TextUtils.isEmpty(Build.MODEL)){
-            for(String brand : VideoDimensionCompat.HONOR6_BRANDS){
-                if(Build.MODEL.contains(brand)){
-                    strategy = MediaFormatStrategyPresets.createExportPreset640x360Strategy();
-                    break;
-                }
-            }
-        }
-        if(strategy == null){
-            strategy = MediaFormatStrategyPresets.createExportPreset1280x720Strategy();
-        }
+    public static void transcodeAddFilter(String srcPath, String dstPath, TextureRenderConfig config, MediaTranscoder.Listener listener){
+        //FIXME 一些机型需要适配
+        //TODO
+        MediaFormatStrategy strategy = MediaFormatStrategyPresets.createExportPreset1280x720Strategy();
         try {
-             MediaTranscoder.getInstance().transcodeVideoSync(srcPath, dstPath, strategy, listener);
+             MediaTranscoder.getInstance().transcodeVideoSync(srcPath, dstPath, strategy, config, listener);
         } catch (Exception e) {
             e.printStackTrace();
         }

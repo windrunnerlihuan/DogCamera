@@ -35,6 +35,7 @@ public class PassThroughTrackTranscoder implements TrackTranscoder {
     private MediaFormat mActualOutputFormat;
     private long mWrittenPresentationTimeUs;
 
+    @SuppressLint("NewApi")
     public PassThroughTrackTranscoder(MediaExtractor extractor, int trackIndex,
                                       QueuedMuxer muxer, QueuedMuxer.SampleType sampleType) {
         mExtractor = extractor;

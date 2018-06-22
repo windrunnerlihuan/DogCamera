@@ -2,6 +2,7 @@ package com.dogcamera.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.text.TextUtils;
 
 import com.dogcamera.DogApplication;
 import com.dogcamera.filter.GPUImageAntiqueFilter;
@@ -16,6 +17,9 @@ import java.io.InputStream;
 public class FilterUtils {
 
     public static GPUImageFilter createFilter(String id) {
+        if(TextUtils.isEmpty(id)){
+            return null;
+        }
         switch (id) {
             case "OR":
                 return new GPUImageFilter();

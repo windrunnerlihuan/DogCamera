@@ -559,6 +559,7 @@ public class CameraActivity extends BaseActivity {
         //TODO
         Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("dog://preview"));
         i.putExtra("uri", mergePath);
+        i.putExtra("filterid", mRecordView.getFilterId());
         startActivity(i);
     }
 

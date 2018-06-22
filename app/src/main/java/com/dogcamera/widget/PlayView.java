@@ -1,8 +1,10 @@
 package com.dogcamera.widget;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.Surface;
@@ -16,8 +18,8 @@ import static com.dogcamera.av.Rotation.ROTATION_90;
 public class PlayView extends BaseGLSurfaceView {
 
     private static final String TAG = PlayView.class.getSimpleName();
-    private int mVideoWidth = -1;
-    private int mVideoHeight = -1;
+    private int mImageWidth = -1;
+    private int mImageHeight = -1;
 
     private String mPlayVideoPath;
 
@@ -49,11 +51,11 @@ public class PlayView extends BaseGLSurfaceView {
             String rotation = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
             tmp = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_WIDTH);
             if (!TextUtils.isEmpty(tmp)) {
-                mVideoWidth = Integer.parseInt(tmp);
+                mImageWidth = Integer.parseInt(tmp);
             }
             tmp = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_HEIGHT);
             if (!TextUtils.isEmpty(tmp)) {
-                mVideoHeight = Integer.parseInt(tmp);
+                mImageHeight = Integer.parseInt(tmp);
             }
 
             if (!TextUtils.isEmpty(rotation)) {
@@ -82,17 +84,17 @@ public class PlayView extends BaseGLSurfaceView {
     }
 
     private void adjustSurfaceSize() {
-        if (mVideoWidth < 0 || mVideoHeight < 0) {
+        if (mImageWidth < 0 || mImageHeight < 0) {
             return;
         }
         int originWidth = this.getMeasuredWidth();
         int originHeight = this.getMeasuredHeight();
 
-        int outputWidth = mVideoWidth;
-        int outputHeight = mVideoHeight;
+        int outputWidth = mImageWidth;
+        int outputHeight = mImageHeight;
         if (mRotation == ROTATION_90 || mRotation == ROTATION_270) {
-            outputWidth = mVideoHeight;
-            outputHeight = mVideoWidth;
+            outputWidth = mImageHeight;
+            outputHeight = mImageWidth;
         }
         float radio1 = outputWidth * 1f / originWidth;
         float radio2 = outputHeight * 1f / originHeight;
@@ -125,6 +127,7 @@ public class PlayView extends BaseGLSurfaceView {
         }
     }
 
+    @TargetApi(Build.VERSION_CODES.O)
     public void startPlay(){
         if (TextUtils.isEmpty(mPlayVideoPath)) {
             return;
@@ -150,6 +153,8 @@ public class PlayView extends BaseGLSurfaceView {
             Surface surface = new Surface(mSurfaceTexture);
             mMediaPlayer.setSurface(surface);
             surface.release();
+
+            mMediaPlayer.reset();
             try {
                 mMediaPlayer.setDataSource(mPlayVideoPath);
             } catch (IOException e) {
@@ -194,13 +199,13 @@ public class PlayView extends BaseGLSurfaceView {
     }
 
     @Override
-    protected int getVideoWidth() {
-        return mVideoWidth;
+    public int getImageWidth() {
+        return mImageWidth;
     }
 
     @Override
-    protected int getVideoHeight() {
-        return mVideoHeight;
+    public int getImageHeight() {
+        return mImageHeight;
     }
 
     public interface OnPlayerStatusListener {

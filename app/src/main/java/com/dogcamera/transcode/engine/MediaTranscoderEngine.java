@@ -83,7 +83,7 @@ public class MediaTranscoderEngine {
      * @throws InterruptedException         when cancel to transcode.
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void transcodeVideo(String outputPath, MediaFormatStrategy formatStrategy) throws IOException, InterruptedException {
+    public void transcodeVideo(String outputPath, MediaFormatStrategy formatStrategy, TextureRenderConfig config) throws IOException, InterruptedException {
         if (outputPath == null) {
             throw new NullPointerException("Output path cannot be null.");
         }
@@ -96,7 +96,7 @@ public class MediaTranscoderEngine {
             mExtractor.setDataSource(mInputFileDescriptor);
             mMuxer = new MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
             setupMetadata();
-            setupTrackTranscoders(formatStrategy);
+            setupTrackTranscoders(formatStrategy, config);
             runPipelines();
             mMuxer.stop();
         } finally {
@@ -153,7 +153,7 @@ public class MediaTranscoderEngine {
         Log.d(TAG, "Duration (us): " + mDurationUs);
     }
 
-    private void setupTrackTranscoders(MediaFormatStrategy formatStrategy) {
+    private void setupTrackTranscoders(MediaFormatStrategy formatStrategy, TextureRenderConfig config) {
         MediaExtractorUtils.TrackResult trackResult = MediaExtractorUtils.getFirstVideoAndAudioTrack(mExtractor);
         MediaFormat videoOutputFormat = formatStrategy.createVideoOutputFormat(trackResult.mVideoTrackFormat);
         MediaFormat audioOutputFormat = formatStrategy.createAudioOutputFormat(trackResult.mAudioTrackFormat);
@@ -172,6 +172,10 @@ public class MediaTranscoderEngine {
             mVideoTrackTranscoder = new PassThroughTrackTranscoder(mExtractor, trackResult.mVideoTrackIndex, queuedMuxer, QueuedMuxer.SampleType.VIDEO);
         } else {
             mVideoTrackTranscoder = new VideoTrackTranscoder(mExtractor, trackResult.mVideoTrackIndex, videoOutputFormat, queuedMuxer);
+        }
+        if(mVideoTrackTranscoder instanceof VideoTrackTranscoder && config != null){
+            //TODO setConfig
+            ((VideoTrackTranscoder)mVideoTrackTranscoder).setRenderConfig(config);
         }
         mVideoTrackTranscoder.setup();
         if (audioOutputFormat == null) {

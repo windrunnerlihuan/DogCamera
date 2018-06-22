@@ -26,6 +26,12 @@ public class AndroidMuxer {
 
 
     public AndroidMuxer(String outputPath) {
+        // Create a MediaMuxer.  We can't add the video track and start() the muxer here,
+        // because our MediaFormat doesn't have the Magic Goodies.  These can only be
+        // obtained from the encoder after it has started processing data.
+        //
+        // We're not actually interested in multiplexing audio.  We just want to convert
+        // the raw H.264 elementary stream we get from MediaCodec into a .mp4 file.
         try {
             mMuxer = new MediaMuxer(outputPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         } catch (IOException e) {

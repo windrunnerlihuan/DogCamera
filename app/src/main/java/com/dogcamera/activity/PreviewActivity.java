@@ -18,6 +18,7 @@ import com.dogcamera.base.BaseActivity;
 import com.dogcamera.fragment.MusicFragment;
 import com.dogcamera.module.PreviewRestartParams;
 import com.dogcamera.transcode.MediaTranscoder;
+import com.dogcamera.transcode.engine.TextureRenderConfig;
 import com.dogcamera.utils.VideoUtils;
 import com.dogcamera.widget.PlayView;
 import com.dogcamera.widget.RectProgressView;
@@ -53,6 +54,7 @@ public class PreviewActivity extends BaseActivity {
     FrameLayout mBottomContainer;
 
     private String mPlayUri;
+    private String mFilterId;
 
     private ProgressHandler mHandler;
 
@@ -120,6 +122,8 @@ public class PreviewActivity extends BaseActivity {
         mHandler = new ProgressHandler(this);
         mRestartListener = new ArrayList<>();
         mPlayUri = getIntent().getStringExtra("uri");
+        mFilterId = getIntent().getStringExtra("filterid");
+
     }
 
     @Override
@@ -212,7 +216,13 @@ public class PreviewActivity extends BaseActivity {
             @Override
             public void run() {
                 String outpath = RecordConstant.RECORD_DIR + File.separator + "transcode" + System.currentTimeMillis() + ".mp4";
-                VideoUtils.transcodeAddFilter(mPlayUri, outpath, new MediaTranscoder.Listener() {
+                VideoUtils.transcodeAddFilter(mPlayUri, outpath,
+                        new TextureRenderConfig.Builder()
+                                .setFilterId(mFilterId)
+                                .setOutputWidth(mVideoView.getImageWidth())
+                                .setOutputHeight(mVideoView.getImageHeight())
+                                .build(),
+                        new MediaTranscoder.Listener() {
                     @Override
                     public void onTranscodeProgress(double progress) {
 

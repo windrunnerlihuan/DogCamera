@@ -142,7 +142,7 @@ public class PermissionUtils {
                     .show();
             permissionGrant.onPermissionGranted(CODE_MULTI_PERMISSION);
         } else {
-            openSettingActivity(activity, "those permission need granted!", (String[]) notGranted.toArray(new String[notGranted.size()]), permissionGrant);
+            openSettingActivity(activity, "those permission need granted!", notGranted.toArray(new String[notGranted.size()]), permissionGrant);
         }
 
     }
@@ -169,20 +169,12 @@ public class PermissionUtils {
 
         } else if (shouldRationalePermissionsList.size() > 0) {
             showMessageOKCancel(activity, "should open those permission",
-                    (String[]) shouldRationalePermissionsList.toArray(new String[shouldRationalePermissionsList.size()]),
-                    new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            ActivityCompat.requestPermissions(activity, shouldRationalePermissionsList.toArray(new String[shouldRationalePermissionsList.size()]),
-                                    CODE_MULTI_PERMISSION);
-                            Log.d(TAG, "showMessageOKCancel requestPermissions");
-                        }
-                    }, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            grant.onPermissionCancel();
-                        }
-                    });
+                    shouldRationalePermissionsList.toArray(new String[shouldRationalePermissionsList.size()]),
+                    (dialog, which) -> {
+                        ActivityCompat.requestPermissions(activity, shouldRationalePermissionsList.toArray(new String[shouldRationalePermissionsList.size()]),
+                                CODE_MULTI_PERMISSION);
+                        Log.d(TAG, "showMessageOKCancel requestPermissions");
+                    }, (dialog, which) -> grant.onPermissionCancel());
         } else {
             grant.onPermissionGranted(CODE_MULTI_PERMISSION);
         }
@@ -194,20 +186,12 @@ public class PermissionUtils {
         //TODO
         showMessageOKCancel(activity, "Rationale: need to open under permission by yourself",
                 new String[]{requestPermission},
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        ActivityCompat.requestPermissions(activity,
-                                new String[]{requestPermission},
-                                requestCode);
-                        Log.d(TAG, "showMessageOKCancel requestPermissions:" + requestPermission);
-                    }
-                }, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        permissionGrant.onPermissionCancel();
-                    }
-                });
+                (dialog, which) -> {
+                    ActivityCompat.requestPermissions(activity,
+                            new String[]{requestPermission},
+                            requestCode);
+                    Log.d(TAG, "showMessageOKCancel requestPermissions:" + requestPermission);
+                }, (dialog, which) -> permissionGrant.onPermissionCancel());
     }
 
     private static void showMessageOKCancel(final Activity context, String message, String[] permissions, DialogInterface.OnClickListener okListener, DialogInterface.OnClickListener cancelListener) {
@@ -267,22 +251,14 @@ public class PermissionUtils {
 
         showMessageOKCancel(activity, message,
                 permissions,
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent();
-                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                        Log.d(TAG, "getPackageName(): " + activity.getPackageName());
-                        Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
-                        intent.setData(uri);
-                        activity.startActivityForResult(intent, PermissionUtils.REQUEST_CODE_SETTING);
-                    }
-                }, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        permissionGrant.onPermissionCancel();
-                    }
-                });
+                (dialog, which) -> {
+                    Intent intent = new Intent();
+                    intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Log.d(TAG, "getPackageName(): " + activity.getPackageName());
+                    Uri uri = Uri.fromParts("package", activity.getPackageName(), null);
+                    intent.setData(uri);
+                    activity.startActivityForResult(intent, PermissionUtils.REQUEST_CODE_SETTING);
+                }, (dialog, which) -> permissionGrant.onPermissionCancel());
     }
 
 

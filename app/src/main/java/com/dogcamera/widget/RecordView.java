@@ -189,7 +189,10 @@ public class RecordView extends BaseGLSurfaceView {
                 case RECORDING_OFF:
                     mVideoEncoder.setCubeAndTextureBuffer(mGLCubeBuffer, mGLTextureBuffer);
                     mVideoEncoder.startRecording(new EncoderConfig(EGL14.eglGetCurrentContext(),
-                            new File(mEncodeVideoPath), getEncoderImageDimen()[0], getEncoderImageDimen()[1], mFilterId));
+                            new File(mEncodeVideoPath),
+                            getEncoderImageDimen()[0], getEncoderImageDimen()[1],
+                            /**录制视频不需要添加滤镜，因为后面编辑页面可能会重新选择滤镜**/
+                            /*mFilterId*/null));
                     mVideoEncoder.setTextureId(textureId);
                     mRecordingStatus = RECORDING_ON;
                     break;
@@ -263,13 +266,17 @@ public class RecordView extends BaseGLSurfaceView {
         mFilterId = filterId;
     }
 
+    public String getFilterId(){
+        return mFilterId;
+    }
+
     @Override
-    protected int getVideoWidth() {
+    protected int getImageWidth() {
         return mImageWidth;
     }
 
     @Override
-    protected int getVideoHeight() {
+    protected int getImageHeight() {
         return mImageHeight;
     }
 

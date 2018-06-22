@@ -178,8 +178,8 @@ public abstract class BaseGLSurfaceView extends GLSurfaceView implements GLSurfa
             surfaceHeight = getSurfaceWidth();
         }
         //获取视频原始宽高
-        int imageWidth = getVideoWidth();
-        int imageHeight = getVideoHeight();
+        int imageWidth = getImageWidth();
+        int imageHeight = getImageHeight();
 
         float ratio1 = (float) surfaceWidth / imageWidth;
         float ratio2 = (float) surfaceHeight / imageHeight;
@@ -340,7 +340,7 @@ public abstract class BaseGLSurfaceView extends GLSurfaceView implements GLSurfa
 
     protected abstract void onSurfaceInit();
 
-    protected abstract int getVideoWidth();
+    protected abstract int getImageWidth();
 
-    protected abstract int getVideoHeight();
+    protected abstract int getImageHeight();
 }

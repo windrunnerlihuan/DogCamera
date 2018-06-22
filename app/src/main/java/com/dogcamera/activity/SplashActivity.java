@@ -3,6 +3,7 @@ package com.dogcamera.activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 
 import com.dogcamera.R;
@@ -79,7 +80,8 @@ public class SplashActivity extends BaseActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == PermissionUtils.REQUEST_CODE_SETTING){
-            requestPermission();
+            new Handler().postDelayed(() -> requestPermission(), 500);
+
         }
 
     }
