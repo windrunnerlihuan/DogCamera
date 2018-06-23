@@ -174,11 +174,11 @@ public class PreviewActivity extends BaseActivity {
                 target = new MusicFragment();
             } else if (SYMBOLS[2].equals(tag)) {
                 t = SYMBOLS[2];
-                //TODO
+                //TODO 贴纸
 
             } else if (SYMBOLS[3].equals(tag)) {
                 t = SYMBOLS[3];
-                //TODO
+                //TODO 滤镜
             }
             if (target != null) {
                 ft.add(R.id.preview_bottom_container, target, t);

@@ -158,9 +158,9 @@ public class VideoUtils {
                 mediaExtractor.unselectTrack(audioTrackIndex);
             }
             //记录当前文件的最后一个pts，作为下一个文件的pts offset
-            //前一个文件的最后一帧与后一个文件的第一帧，差10ms，只是估计值，不准确，但能用
+            //前一个文件的最后一帧与后一个文件的第一帧，差1ms，只是估计值，不准确，但能用
             if(mediaIterator.hasNext()){
-                ptsOffset = Math.max(videoPtsOffsetTmp, audioPtsOffsetTmp) + 10000L;
+                ptsOffset = Math.max(videoPtsOffsetTmp, audioPtsOffsetTmp) + 1000L;
             }
 
             mediaExtractor.release();

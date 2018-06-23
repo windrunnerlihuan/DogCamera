@@ -127,7 +127,7 @@ public class CameraActivity extends BaseActivity {
             CameraActivity activity = mContextRef.get();
             switch (msg.what) {
                 case MSG_PROGRESS_UPDATE:
-                    // TODO 更新进度
+                    // 更新进度
                     activity.updateProgressUI();
                     break;
             }
@@ -556,7 +556,6 @@ public class CameraActivity extends BaseActivity {
     }
 
     private void doStartEditPage(String mergePath){
-        //TODO
         Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("dog://preview"));
         i.putExtra("uri", mergePath);
         i.putExtra("filterid", mRecordView.getFilterId());
