@@ -1,11 +1,14 @@
 package com.dogcamera.transcode.engine;
 
-public class TextureRenderConfig {
+public class RenderConfig {
+    //视频相关
     public int outputVideoWidth;                    //输出视频的宽
     public int outputVideoHeight;                   //输出视频的高
     public String filterId;
+    //音频相关
+    public String audioPath;
 
-    private TextureRenderConfig(){
+    private RenderConfig(){
 
     }
 
@@ -13,6 +16,7 @@ public class TextureRenderConfig {
         private int outputVideoWidth;
         private int outputVideoHeight;
         private String filterId;
+        private String audioPath;
 
         public Builder(){
 
@@ -29,12 +33,17 @@ public class TextureRenderConfig {
             this.filterId = filterId;
             return this;
         }
+        public Builder setAudioPath(String audioPath){
+            this.audioPath = audioPath;
+            return this;
+        }
 
-        public TextureRenderConfig build(){
-            TextureRenderConfig config = new TextureRenderConfig();
+        public RenderConfig build(){
+            RenderConfig config = new RenderConfig();
             config.outputVideoWidth = this.outputVideoWidth;
             config.outputVideoHeight = this.outputVideoHeight;
             config.filterId = this.filterId;
+            config.audioPath = this.audioPath;
             return config;
         }
     }

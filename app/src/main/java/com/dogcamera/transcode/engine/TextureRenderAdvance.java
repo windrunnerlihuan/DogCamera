@@ -21,9 +21,6 @@ package com.dogcamera.transcode.engine;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
-import android.opengl.Matrix;
-import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.dogcamera.filter.GPUImageExtTexFilter;
 import com.dogcamera.filter.GPUImageFilterGroup;
@@ -46,14 +43,14 @@ public class TextureRenderAdvance extends AbsTextureRender{
 
     private GPUImageFilterGroup mFilterGroup;
 
-    private TextureRenderConfig mRenderConfig;
+    private RenderConfig mRenderConfig;
 
     private int mTextureID = OpenGlUtils.NO_TEXTURE;
     private FloatBuffer mGLCubeBuffer;
     private FloatBuffer mGLTextureBuffer;
 
 
-    public TextureRenderAdvance(TextureRenderConfig config) {
+    public TextureRenderAdvance(RenderConfig config) {
         mRenderConfig = config;
     }
     @Override

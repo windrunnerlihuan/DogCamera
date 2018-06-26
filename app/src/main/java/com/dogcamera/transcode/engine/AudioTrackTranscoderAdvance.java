@@ -1,16 +1,21 @@
 package com.dogcamera.transcode.engine;
 
 import android.annotation.TargetApi;
+import android.content.res.AssetFileDescriptor;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.os.Build;
+import android.text.TextUtils;
 
+import com.dogcamera.DogApplication;
 import com.dogcamera.transcode.compat.MediaCodecBufferCompatWrapper;
+import com.dogcamera.utils.VideoUtils;
 
+import java.io.FileDescriptor;
 import java.io.IOException;
 
-public class AudioTrackTranscoder implements TrackTranscoder {
+public class AudioTrackTranscoderAdvance implements TrackTranscoder {
 
     private static final QueuedMuxer.SampleType SAMPLE_TYPE = QueuedMuxer.SampleType.AUDIO;
 
@@ -42,14 +47,28 @@ public class AudioTrackTranscoder implements TrackTranscoder {
 
     private AudioChannel mAudioChannel;
 
-    public AudioTrackTranscoder(MediaExtractor extractor, int trackIndex,
-                                MediaFormat outputFormat, QueuedMuxer muxer) {
+    //混音配置相关变量如下
+    private RenderConfig mRenderConfig;
+    private MediaExtractor mMixedExtractor;
+    private MediaCodec mMixedDecoder;
+    private MediaCodecBufferCompatWrapper mMixedDecoderBuffers;
+    private boolean mMixedDecoderStarted;
+
+    public AudioTrackTranscoderAdvance(MediaExtractor extractor, int trackIndex,
+                                       MediaFormat outputFormat, QueuedMuxer muxer) {
         mExtractor = extractor;
         mTrackIndex = trackIndex;
         mOutputFormat = outputFormat;
         mMuxer = muxer;
 
         mInputFormat = mExtractor.getTrackFormat(mTrackIndex);
+    }
+
+    /**
+     *  设置混音等等
+     */
+    public void setRenderConfig(RenderConfig config){
+        mRenderConfig = config;
     }
 
     @Override
@@ -77,6 +96,45 @@ public class AudioTrackTranscoder implements TrackTranscoder {
         mDecoderBuffers = new MediaCodecBufferCompatWrapper(mDecoder);
 
         mAudioChannel = new AudioChannel(mDecoder, mEncoder, mOutputFormat);
+        //处理混音文件
+        setupMixedAudio();
+    }
+
+    private void setupMixedAudio() {
+        if(mRenderConfig == null){
+            return;
+        }
+        if(!TextUtils.isEmpty(mRenderConfig.audioPath)){
+            mMixedExtractor = new MediaExtractor();
+            FileDescriptor fd;
+            try {
+                fd = DogApplication.getInstance().getAssets().openFd(mRenderConfig.audioPath).getFileDescriptor();
+                mMixedExtractor.setDataSource(fd);
+            } catch (IOException e) {
+                e.printStackTrace();
+                mMixedExtractor.release();
+                mMixedExtractor = null;
+                return;
+            }
+            int audioTrackIndex = VideoUtils.findTrackIndex(mMixedExtractor, "audio/");
+            if(audioTrackIndex == -1){
+                mMixedExtractor.release();
+                mMixedExtractor = null;
+                return;
+            }
+            mMixedExtractor.selectTrack(audioTrackIndex);
+            MediaFormat srcMediaFormat = mMixedExtractor.getTrackFormat(audioTrackIndex);
+            try {
+                mMixedDecoder = MediaCodec.createDecoderByType(srcMediaFormat.getString(MediaFormat.KEY_MIME));
+            } catch (IOException e) {
+                throw new IllegalStateException(e);
+            }
+            mMixedDecoder.configure(srcMediaFormat, null, null, 0);
+            mMixedDecoder.start();
+            mMixedDecoderStarted = true;
+            mMixedDecoderBuffers = new MediaCodecBufferCompatWrapper(mMixedDecoder);
+        }
+
     }
 
     @Override
@@ -122,6 +180,10 @@ public class AudioTrackTranscoder implements TrackTranscoder {
         mDecoder.queueInputBuffer(result, 0, sampleSize, mExtractor.getSampleTime(), isKeyFrame ? MediaCodec.BUFFER_FLAG_SYNC_FRAME : 0);
         mExtractor.advance();
         return DRAIN_STATE_CONSUMED;
+    }
+
+    private void drainMixedExtractor(long timeoutUs, int sampleSize){
+
     }
 
     private int drainDecoder(long timeoutUs) {
@@ -207,6 +269,15 @@ public class AudioTrackTranscoder implements TrackTranscoder {
             if (mEncoderStarted) mEncoder.stop();
             mEncoder.release();
             mEncoder = null;
+        }
+        releaseMixedAudioDecoder();
+    }
+
+    private void releaseMixedAudioDecoder(){
+        if (mMixedDecoder != null) {
+            if (mDecoderStarted) mMixedDecoder.stop();
+            mMixedDecoder.release();
+            mMixedDecoder = null;
         }
     }
 }

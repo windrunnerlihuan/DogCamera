@@ -83,7 +83,7 @@ public class MediaTranscoderEngine {
      * @throws InterruptedException         when cancel to transcode.
      */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void transcodeVideo(String outputPath, MediaFormatStrategy formatStrategy, TextureRenderConfig config) throws IOException, InterruptedException {
+    public void transcodeVideo(String outputPath, MediaFormatStrategy formatStrategy, RenderConfig config) throws IOException, InterruptedException {
         if (outputPath == null) {
             throw new NullPointerException("Output path cannot be null.");
         }
@@ -153,19 +153,16 @@ public class MediaTranscoderEngine {
         Log.d(TAG, "Duration (us): " + mDurationUs);
     }
 
-    private void setupTrackTranscoders(MediaFormatStrategy formatStrategy, TextureRenderConfig config) {
+    private void setupTrackTranscoders(MediaFormatStrategy formatStrategy, RenderConfig config) {
         MediaExtractorUtils.TrackResult trackResult = MediaExtractorUtils.getFirstVideoAndAudioTrack(mExtractor);
         MediaFormat videoOutputFormat = formatStrategy.createVideoOutputFormat(trackResult.mVideoTrackFormat);
         MediaFormat audioOutputFormat = formatStrategy.createAudioOutputFormat(trackResult.mAudioTrackFormat);
         if (videoOutputFormat == null && audioOutputFormat == null) {
             throw new InvalidOutputFormatException("MediaFormatStrategy returned pass-through for both video and audio. No transcoding is necessary.");
         }
-        QueuedMuxer queuedMuxer = new QueuedMuxer(mMuxer, new QueuedMuxer.Listener() {
-            @Override
-            public void onDetermineOutputFormat() {
-                MediaFormatValidator.validateVideoOutputFormat(mVideoTrackTranscoder.getDeterminedFormat());
-                MediaFormatValidator.validateAudioOutputFormat(mAudioTrackTranscoder.getDeterminedFormat());
-            }
+        QueuedMuxer queuedMuxer = new QueuedMuxer(mMuxer, () -> {
+            MediaFormatValidator.validateVideoOutputFormat(mVideoTrackTranscoder.getDeterminedFormat());
+            MediaFormatValidator.validateAudioOutputFormat(mAudioTrackTranscoder.getDeterminedFormat());
         });
 
         if (videoOutputFormat == null) {
@@ -173,8 +170,8 @@ public class MediaTranscoderEngine {
         } else {
             mVideoTrackTranscoder = new VideoTrackTranscoder(mExtractor, trackResult.mVideoTrackIndex, videoOutputFormat, queuedMuxer);
         }
+        //setConfig
         if(mVideoTrackTranscoder instanceof VideoTrackTranscoder && config != null){
-            //TODO setConfig
             ((VideoTrackTranscoder)mVideoTrackTranscoder).setRenderConfig(config);
         }
         mVideoTrackTranscoder.setup();

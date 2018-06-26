@@ -8,22 +8,18 @@ import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
-import android.text.TextUtils;
 import android.util.Log;
 
 import com.dogcamera.transcode.MediaTranscoder;
-import com.dogcamera.transcode.engine.MediaTranscoderEngine;
-import com.dogcamera.transcode.engine.TextureRenderConfig;
+import com.dogcamera.transcode.engine.RenderConfig;
 import com.dogcamera.transcode.format.MediaFormatStrategy;
 import com.dogcamera.transcode.format.MediaFormatStrategyPresets;
-import com.dogcamera.transcode.utils.VideoDimensionCompat;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.Future;
 
 /**
  * Created by huanli on 2018/2/28.
@@ -34,6 +30,7 @@ public class VideoUtils {
     private static final String TAG = "VideoUtils";
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @Deprecated
     public static boolean joinVideoForSameCodec(List<String> fileList, String outPath){
         Iterator<String> fileIterator = fileList.iterator();
 
@@ -187,10 +184,10 @@ public class VideoUtils {
      * 转码并添加滤镜，一些机型转换成1280x720的视频可能会有花屏、绿屏，需要做适配
      */
     @SuppressLint("NewApi")
-    public static void transcodeAddFilter(String srcPath, String dstPath, TextureRenderConfig config, MediaTranscoder.Listener listener){
+    public static void transcodeAddFilter(String srcPath, String dstPath, RenderConfig config, MediaTranscoder.Listener listener){
         //FIXME 一些机型需要适配
         //TODO
-        MediaFormatStrategy strategy = MediaFormatStrategyPresets.createExportPreset1280x720Strategy();
+        MediaFormatStrategy strategy = MediaFormatStrategyPresets.createExportPresetCustomStategy();
         try {
              MediaTranscoder.getInstance().transcodeVideoSync(srcPath, dstPath, strategy, config, listener);
         } catch (Exception e) {

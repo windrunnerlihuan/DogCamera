@@ -1,5 +1,7 @@
 package com.dogcamera.module;
 
+import android.support.v4.util.SimpleArrayMap;
+
 public class PreviewRestartParams {
 
     public Boolean isNotify;
@@ -35,5 +37,6 @@ public class PreviewRestartParams {
     public interface PreviewRestartListener {
         void onPreviewRestart();
         void onPreviewStop();
+        SimpleArrayMap<Integer, Object> onPreviewGetPropSet();
     }
 }

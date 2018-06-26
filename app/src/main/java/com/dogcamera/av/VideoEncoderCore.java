@@ -44,7 +44,7 @@ public class VideoEncoderCore extends MediaEncoderCore {
     private static final String MIME_TYPE = "video/avc";    // H.264 Advanced Video Coding
     private static final int FRAME_RATE = 30;               // 30fps
     private static final int IFRAME_INTERVAL = 1;           // 1 seconds between I-frames
-    private static final int BIT_RATE = 10 * 1024 * 1024;
+    private static final int BIT_RATE = 3000 * 1024;
 
     private Surface mInputSurface;
 

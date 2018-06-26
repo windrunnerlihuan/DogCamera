@@ -80,6 +80,10 @@ public class MediaFormatStrategyPresets {
         return new ExportPresetXxYStrategy(width, height);
     }
 
+    public static MediaFormatStrategy createExportPresetCustomStategy(){
+        return new ExportPresetCustomStrategy();
+    }
+
     private MediaFormatStrategyPresets() {
     }
 }

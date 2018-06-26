@@ -23,7 +23,7 @@ import android.support.annotation.RequiresApi;
 import android.util.Log;
 
 import com.dogcamera.transcode.engine.MediaTranscoderEngine;
-import com.dogcamera.transcode.engine.TextureRenderConfig;
+import com.dogcamera.transcode.engine.RenderConfig;
 import com.dogcamera.transcode.format.MediaFormatPresets;
 import com.dogcamera.transcode.format.MediaFormatStrategy;
 
@@ -224,7 +224,7 @@ public class MediaTranscoder {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-    public void transcodeVideoSync(final String inPath, final String outPath, final MediaFormatStrategy outFormatStrategy, TextureRenderConfig config, final Listener listener) throws Exception {
+    public void transcodeVideoSync(final String inPath, final String outPath, final MediaFormatStrategy outFormatStrategy, RenderConfig config, final Listener listener) throws Exception {
         FileInputStream fileInputStream = null;
         FileDescriptor inFileDescriptor;
         try {
@@ -293,7 +293,7 @@ public class MediaTranscoder {
         /**
          * Called when transcode failed.
          *
-         * @param exception Exception thrown from {@link MediaTranscoderEngine#transcodeVideo(String, MediaFormatStrategy, TextureRenderConfig)}.
+         * @param exception Exception thrown from {@link MediaTranscoderEngine#transcodeVideo(String, MediaFormatStrategy, RenderConfig)}.
          *                  Note that it IS NOT {@link java.lang.Throwable}. This means {@link java.lang.Error} won't be caught.
          */
         void onTranscodeFailed(Exception exception);

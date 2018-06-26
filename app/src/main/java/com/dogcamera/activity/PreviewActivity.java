@@ -6,6 +6,7 @@ import android.os.Message;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.util.SimpleArrayMap;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -18,7 +19,8 @@ import com.dogcamera.base.BaseActivity;
 import com.dogcamera.fragment.MusicFragment;
 import com.dogcamera.module.PreviewRestartParams;
 import com.dogcamera.transcode.MediaTranscoder;
-import com.dogcamera.transcode.engine.TextureRenderConfig;
+import com.dogcamera.transcode.engine.RenderConfig;
+import com.dogcamera.utils.DogConstants;
 import com.dogcamera.utils.VideoUtils;
 import com.dogcamera.widget.PlayView;
 import com.dogcamera.widget.RectProgressView;
@@ -209,18 +211,24 @@ public class PreviewActivity extends BaseActivity {
 
     private void finishPreview(){
         mVideoView.stopPlay();
+        SimpleArrayMap<Integer, Object> retPropSet = new SimpleArrayMap<>();
         for (PreviewRestartParams.PreviewRestartListener l : mRestartListener) {
             l.onPreviewStop();
+            if(l.onPreviewGetPropSet() != null){
+                retPropSet.putAll(l.onPreviewGetPropSet());
+            }
         }
         new Thread(){
             @Override
             public void run() {
                 String outpath = RecordConstant.RECORD_DIR + File.separator + "transcode" + System.currentTimeMillis() + ".mp4";
+
                 VideoUtils.transcodeAddFilter(mPlayUri, outpath,
-                        new TextureRenderConfig.Builder()
+                        new RenderConfig.Builder()
                                 .setFilterId(mFilterId)
                                 .setOutputWidth(mVideoView.getImageWidth())
                                 .setOutputHeight(mVideoView.getImageHeight())
+                                .setAudioPath((String) retPropSet.get(DogConstants.PREVIEW_KEY_MUSIC))
                                 .build(),
                         new MediaTranscoder.Listener() {
                     @Override
