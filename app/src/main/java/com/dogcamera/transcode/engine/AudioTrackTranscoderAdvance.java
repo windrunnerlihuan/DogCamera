@@ -242,20 +242,15 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
                 return DRAIN_STATE_NONE;
             case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                 //TODO setSugarActualDecodedFormat
-
+                mAudioChannelAdvance.setSuagrActualDecodedFormat(mSugarDecoder.getOutputFormat());
             case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
                 return DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY;
         }
 
-        if ((mSugarBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
-            mIsDecoderEOS = true;
+        if (mSugarBufferInfo.size > 0) {
             //TODO drainDecoderBufferAndQueue
-
-        } else if (mSugarBufferInfo.size > 0) {
-            //TODO drainDecoderBufferAndQueue
-
+            mAudioChannelAdvance.drainSugarDecoderBufferAndQueue(result, mSugarBufferInfo.presentationTimeUs);
         }
-
         return DRAIN_STATE_CONSUMED;
 
     }

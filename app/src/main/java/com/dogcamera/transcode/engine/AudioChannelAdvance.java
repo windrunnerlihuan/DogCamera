@@ -51,6 +51,17 @@ class AudioChannelAdvance {
 
     private MediaFormat mActualDecodedFormat;
 
+    //混音相关配置
+    private MediaFormat mSugarActualDecodedFormat;
+    private MediaCodec mSugarDecoder;
+    private MediaCodecBufferCompatWrapper mSugarDecoderBuffers;
+    private int mSugarInputSampleRate;
+    private int mSugarInputChannelCount;
+    private AudioRemixer mSugarRemixer;
+    private final AudioBuffer mSugarOverflowBuffer = new AudioBuffer();
+    private final Queue<AudioBuffer> mSugarEmptyBuffers = new ArrayDeque<>();
+    private final Queue<AudioBuffer> mSugarFilledBuffers = new ArrayDeque<>();
+
 
     public AudioChannelAdvance(final MediaCodec decoder,
                                final MediaCodec encoder, final MediaFormat encodeFormat) {
@@ -62,8 +73,9 @@ class AudioChannelAdvance {
         mEncoderBuffers = new MediaCodecBufferCompatWrapper(mEncoder);
     }
 
-    public void setSugarConfig(){
-
+    public void setSugarConfig(MediaCodec decoder, MediaFormat decodeFormat){
+        mSugarDecoder = decoder;
+        mSugarDecoderBuffers = new MediaCodecBufferCompatWrapper(mDecoder);
     }
 
     public void setActualDecodedFormat(final MediaFormat decodedFormat) {
@@ -96,6 +108,36 @@ class AudioChannelAdvance {
         mOverflowBuffer.presentationTimeUs = 0;
     }
 
+    public void setSuagrActualDecodedFormat(final MediaFormat decodedFormat){
+        mSugarActualDecodedFormat = decodedFormat;
+
+        mSugarInputSampleRate = mSugarActualDecodedFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+        if (mSugarInputSampleRate != mEncodeFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)) {
+            throw new UnsupportedOperationException("Audio sample rate conversion not supported yet.");
+        }
+
+        mSugarInputChannelCount = mSugarActualDecodedFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+        mOutputChannelCount = mEncodeFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT);
+
+        if (mSugarInputChannelCount != 1 && mSugarInputChannelCount != 2) {
+            throw new UnsupportedOperationException("Input channel count (" + mInputChannelCount + ") not supported.");
+        }
+
+        if (mOutputChannelCount != 1 && mOutputChannelCount != 2) {
+            throw new UnsupportedOperationException("Output channel count (" + mOutputChannelCount + ") not supported.");
+        }
+
+        if (mSugarInputChannelCount > mOutputChannelCount) {
+            mSugarRemixer = AudioRemixer.DOWNMIX;
+        } else if (mSugarInputChannelCount < mOutputChannelCount) {
+            mSugarRemixer = AudioRemixer.UPMIX;
+        } else {
+            mSugarRemixer = AudioRemixer.PASSTHROUGH;
+        }
+
+        mSugarOverflowBuffer.presentationTimeUs = 0;
+    }
+
     public void drainDecoderBufferAndQueue(final int bufferIndex, final long presentationTimeUs) {
         if (mActualDecodedFormat == null) {
             throw new RuntimeException("Buffer received before format!");
@@ -124,6 +166,37 @@ class AudioChannelAdvance {
 
         mFilledBuffers.add(buffer);
     }
+
+    public void drainSugarDecoderBufferAndQueue(final int bufferIndex, final long presentationTimeUs) {
+        if (mSugarActualDecodedFormat == null) {
+            throw new RuntimeException("Buffer received before format!");
+        }
+
+        final ByteBuffer data =
+                bufferIndex == BUFFER_INDEX_END_OF_STREAM ?
+                        null : mSugarDecoderBuffers.getOutputBuffer(bufferIndex);
+
+        AudioBuffer buffer = mSugarEmptyBuffers.poll();
+        if (buffer == null) {
+            buffer = new AudioBuffer();
+        }
+
+        buffer.bufferIndex = bufferIndex;
+        buffer.presentationTimeUs = presentationTimeUs;
+        buffer.data = data == null ? null : data.asShortBuffer();
+
+        if (mSugarOverflowBuffer.data == null) {
+            mSugarOverflowBuffer.data = ByteBuffer
+                    .allocateDirect(data.capacity())
+                    .order(ByteOrder.nativeOrder())
+                    .asShortBuffer();
+            mSugarOverflowBuffer.data.clear().flip();
+        }
+
+        mSugarFilledBuffers.add(buffer);
+    }
+
+
 
     public boolean feedEncoder(long timeoutUs) {
         final boolean hasOverflow = mOverflowBuffer.data != null && mOverflowBuffer.data.hasRemaining();
