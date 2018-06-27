@@ -1,7 +1,6 @@
 package com.dogcamera.transcode.engine;
 
 import android.annotation.TargetApi;
-import android.content.res.AssetFileDescriptor;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
@@ -45,14 +44,18 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
     private boolean mDecoderStarted;
     private boolean mEncoderStarted;
 
-    private AudioChannel mAudioChannel;
+    private AudioChannelAdvance mAudioChannelAdvance;
 
     //混音配置相关变量如下
     private RenderConfig mRenderConfig;
-    private MediaExtractor mMixedExtractor;
-    private MediaCodec mMixedDecoder;
-    private MediaCodecBufferCompatWrapper mMixedDecoderBuffers;
-    private boolean mMixedDecoderStarted;
+    private int mSurgarTrackIndex;
+    private MediaExtractor mSugarExtractor;
+    private MediaCodec mSugarDecoder;
+    private MediaCodecBufferCompatWrapper mSugarDecoderBuffers;
+    private boolean mSugarDecoderStarted;
+    private boolean mIsSurgarExtractorEOS;
+    private boolean mIsSurgarDecoderEOS;
+    private final MediaCodec.BufferInfo mSugarBufferInfo = new MediaCodec.BufferInfo();
 
     public AudioTrackTranscoderAdvance(MediaExtractor extractor, int trackIndex,
                                        MediaFormat outputFormat, QueuedMuxer muxer) {
@@ -95,44 +98,49 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
         mDecoderStarted = true;
         mDecoderBuffers = new MediaCodecBufferCompatWrapper(mDecoder);
 
-        mAudioChannel = new AudioChannel(mDecoder, mEncoder, mOutputFormat);
+        mAudioChannelAdvance = new AudioChannelAdvance(mDecoder, mEncoder, mOutputFormat);
         //处理混音文件
-        setupMixedAudio();
+        setupSugar();
     }
 
-    private void setupMixedAudio() {
+    private boolean createSugarExtractor(){
+        releaseSugarExtractor();
+        mSugarExtractor = new MediaExtractor();
+        FileDescriptor fd;
+        try {
+            fd = DogApplication.getInstance().getAssets().openFd(mRenderConfig.audioPath).getFileDescriptor();
+            mSugarExtractor.setDataSource(fd);
+        } catch (IOException e) {
+            e.printStackTrace();
+            releaseSugarExtractor();
+            return false;
+        }
+        return true;
+    }
+
+    private void setupSugar() {
         if(mRenderConfig == null){
             return;
         }
         if(!TextUtils.isEmpty(mRenderConfig.audioPath)){
-            mMixedExtractor = new MediaExtractor();
-            FileDescriptor fd;
-            try {
-                fd = DogApplication.getInstance().getAssets().openFd(mRenderConfig.audioPath).getFileDescriptor();
-                mMixedExtractor.setDataSource(fd);
-            } catch (IOException e) {
-                e.printStackTrace();
-                mMixedExtractor.release();
-                mMixedExtractor = null;
-                return;
-            }
-            int audioTrackIndex = VideoUtils.findTrackIndex(mMixedExtractor, "audio/");
+            if(!createSugarExtractor()) return;
+            int audioTrackIndex = VideoUtils.findTrackIndex(mSugarExtractor, "audio/");
             if(audioTrackIndex == -1){
-                mMixedExtractor.release();
-                mMixedExtractor = null;
+                releaseSugarExtractor();
                 return;
             }
-            mMixedExtractor.selectTrack(audioTrackIndex);
-            MediaFormat srcMediaFormat = mMixedExtractor.getTrackFormat(audioTrackIndex);
+            mSurgarTrackIndex = audioTrackIndex;
+            mSugarExtractor.selectTrack(audioTrackIndex);
+            MediaFormat srcMediaFormat = mSugarExtractor.getTrackFormat(audioTrackIndex);
             try {
-                mMixedDecoder = MediaCodec.createDecoderByType(srcMediaFormat.getString(MediaFormat.KEY_MIME));
+                mSugarDecoder = MediaCodec.createDecoderByType(srcMediaFormat.getString(MediaFormat.KEY_MIME));
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
-            mMixedDecoder.configure(srcMediaFormat, null, null, 0);
-            mMixedDecoder.start();
-            mMixedDecoderStarted = true;
-            mMixedDecoderBuffers = new MediaCodecBufferCompatWrapper(mMixedDecoder);
+            mSugarDecoder.configure(srcMediaFormat, null, null, 0);
+            mSugarDecoder.start();
+            mSugarDecoderStarted = true;
+            mSugarDecoderBuffers = new MediaCodecBufferCompatWrapper(mSugarDecoder);
         }
 
     }
@@ -154,7 +162,7 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
             // NOTE: not repeating to keep from deadlock when encoder is full.
         } while (status == DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY);
 
-        while (mAudioChannel.feedEncoder(0)) busy = true;
+        while (mAudioChannelAdvance.feedEncoder(0)) busy = true;
         while (drainExtractor(0) != DRAIN_STATE_NONE) busy = true;
 
         return busy;
@@ -182,8 +190,24 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
         return DRAIN_STATE_CONSUMED;
     }
 
-    private void drainMixedExtractor(long timeoutUs, int sampleSize){
-
+    private int drainSugarExtractor(long timeoutUs){
+        if(mIsSurgarExtractorEOS) return DRAIN_STATE_NONE;
+        int trackIndex = mSugarExtractor.getSampleTrackIndex();
+        if(trackIndex >= 0 && trackIndex != mSurgarTrackIndex) {
+            return DRAIN_STATE_NONE;
+        }
+        final int result = mSugarDecoder.dequeueInputBuffer(timeoutUs);
+        if(result < 0) return DRAIN_STATE_NONE;
+        /** 读取完毕后，重新从头读取 */
+        if(trackIndex < 0){
+            createSugarExtractor();
+            mSugarExtractor.selectTrack(mSurgarTrackIndex);
+        }
+        final int sampleSize = mSugarExtractor.readSampleData(mSugarDecoderBuffers.getInputBuffer(result), 0);
+        final boolean isKeyFrame = (mSugarExtractor.getSampleFlags() & MediaExtractor.SAMPLE_FLAG_SYNC) != 0;
+        mSugarDecoder.queueInputBuffer(result,  0, sampleSize, mSugarExtractor.getSampleTime(), isKeyFrame ? MediaCodec.BUFFER_FLAG_SYNC_FRAME : 0);
+        mSugarExtractor.advance();
+        return DRAIN_STATE_CONSUMED;
     }
 
     private int drainDecoder(long timeoutUs) {
@@ -194,19 +218,46 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
             case MediaCodec.INFO_TRY_AGAIN_LATER:
                 return DRAIN_STATE_NONE;
             case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
-                mAudioChannel.setActualDecodedFormat(mDecoder.getOutputFormat());
+                mAudioChannelAdvance.setActualDecodedFormat(mDecoder.getOutputFormat());
             case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
                 return DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY;
         }
 
         if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
             mIsDecoderEOS = true;
-            mAudioChannel.drainDecoderBufferAndQueue(AudioChannel.BUFFER_INDEX_END_OF_STREAM, 0);
+            mAudioChannelAdvance.drainDecoderBufferAndQueue(AudioChannel.BUFFER_INDEX_END_OF_STREAM, 0);
         } else if (mBufferInfo.size > 0) {
-            mAudioChannel.drainDecoderBufferAndQueue(result, mBufferInfo.presentationTimeUs);
+            mAudioChannelAdvance.drainDecoderBufferAndQueue(result, mBufferInfo.presentationTimeUs);
         }
 
         return DRAIN_STATE_CONSUMED;
+    }
+
+    private int drainSugarDecoder(long timeoutUs){
+        if(mIsSurgarDecoderEOS) return DRAIN_STATE_NONE;
+
+        int result = mSugarDecoder.dequeueOutputBuffer(mSugarBufferInfo, timeoutUs);
+        switch (result) {
+            case MediaCodec.INFO_TRY_AGAIN_LATER:
+                return DRAIN_STATE_NONE;
+            case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
+                //TODO setSugarActualDecodedFormat
+
+            case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
+                return DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY;
+        }
+
+        if ((mSugarBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+            mIsDecoderEOS = true;
+            //TODO drainDecoderBufferAndQueue
+
+        } else if (mSugarBufferInfo.size > 0) {
+            //TODO drainDecoderBufferAndQueue
+
+        }
+
+        return DRAIN_STATE_CONSUMED;
+
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -270,14 +321,21 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
             mEncoder.release();
             mEncoder = null;
         }
-        releaseMixedAudioDecoder();
+        releaseSuagrDecoder();
     }
 
-    private void releaseMixedAudioDecoder(){
-        if (mMixedDecoder != null) {
-            if (mDecoderStarted) mMixedDecoder.stop();
-            mMixedDecoder.release();
-            mMixedDecoder = null;
+    private void releaseSuagrDecoder(){
+        if (mSugarDecoder != null) {
+            if (mDecoderStarted) mSugarDecoder.stop();
+            mSugarDecoder.release();
+            mSugarDecoder = null;
+        }
+    }
+
+    private void releaseSugarExtractor(){
+        if(mSugarExtractor != null){
+            mSugarExtractor.release();
+            mSugarExtractor = null;
         }
     }
 }
