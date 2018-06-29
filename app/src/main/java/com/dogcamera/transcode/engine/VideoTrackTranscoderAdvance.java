@@ -20,6 +20,7 @@ import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import com.dogcamera.transcode.format.MediaFormatExtraConstants;
 
@@ -27,8 +28,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 // Refer: https://android.googlesource.com/platform/cts/+/lollipop-release/tests/tests/media/src/android/media/cts/ExtractDecodeEditEncodeMuxTest.java
-public class VideoTrackTranscoder implements TrackTranscoder {
-    private static final String TAG = "VideoTrackTranscoder";
+public class VideoTrackTranscoderAdvance implements TrackTranscoder {
+    private static final String TAG = "VideoTrackTranscoderAdvance";
     private static final int DRAIN_STATE_NONE = 0;
     private static final int DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY = 1;
     private static final int DRAIN_STATE_CONSUMED = 2;
@@ -52,12 +53,20 @@ public class VideoTrackTranscoder implements TrackTranscoder {
     private boolean mEncoderStarted;
     private long mWrittenPresentationTimeUs;
 
-    public VideoTrackTranscoder(MediaExtractor extractor, int trackIndex,
-                                MediaFormat outputFormat, QueuedMuxer muxer) {
+    private RenderConfig mRenderConfig;
+
+    public VideoTrackTranscoderAdvance(MediaExtractor extractor, int trackIndex,
+                                       MediaFormat outputFormat, QueuedMuxer muxer) {
         mExtractor = extractor;
         mTrackIndex = trackIndex;
         mOutputFormat = outputFormat;
         mMuxer = muxer;
+    }
+    /**
+     *  设置水印、滤镜等等
+     */
+    public void setRenderConfig(RenderConfig config){
+        mRenderConfig = config;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
@@ -83,7 +92,16 @@ public class VideoTrackTranscoder implements TrackTranscoder {
             // refer: https://android.googlesource.com/platform/frameworks/av/+blame/lollipop-release/media/libstagefright/Utils.cpp
             inputFormat.setInteger(MediaFormatExtraConstants.KEY_ROTATION_DEGREES, 0);
         }
-        mDecoderOutputSurfaceWrapper = new OutputSurface();
+        //设置视频图像宽高，使得后续GPUImageFilter初始化
+        if(mRenderConfig != null){
+            if(mRenderConfig.outputVideoWidth <= 0 || mRenderConfig.outputVideoHeight <= 0){
+                mRenderConfig.outputVideoWidth = mOutputFormat.getInteger(MediaFormat.KEY_WIDTH);
+                mRenderConfig.outputVideoHeight = mOutputFormat.getInteger(MediaFormat.KEY_HEIGHT);
+            }
+            mDecoderOutputSurfaceWrapper = new OutputSurface(mRenderConfig);
+        }else{
+            mDecoderOutputSurfaceWrapper = new OutputSurface();
+        }
         try {
             mDecoder = MediaCodec.createDecoderByType(inputFormat.getString(MediaFormat.KEY_MIME));
         } catch (IOException e) {
@@ -100,6 +118,7 @@ public class VideoTrackTranscoder implements TrackTranscoder {
         return mActualOutputFormat;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public boolean stepPipeline() {
         boolean busy = false;
@@ -127,7 +146,7 @@ public class VideoTrackTranscoder implements TrackTranscoder {
     }
 
     // TODO: CloseGuard
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Override
     public void release() {
         if (mDecoderOutputSurfaceWrapper != null) {
@@ -170,7 +189,7 @@ public class VideoTrackTranscoder implements TrackTranscoder {
         return DRAIN_STATE_CONSUMED;
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private int drainDecoder(long timeoutUs) {
         if (mIsDecoderEOS) return DRAIN_STATE_NONE;
         int result = mDecoder.dequeueOutputBuffer(mBufferInfo, timeoutUs);
@@ -199,7 +218,7 @@ public class VideoTrackTranscoder implements TrackTranscoder {
         return DRAIN_STATE_CONSUMED;
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
+    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private int drainEncoder(long timeoutUs) {
         if (mIsEncoderEOS) return DRAIN_STATE_NONE;
         int result = mEncoder.dequeueOutputBuffer(mBufferInfo, timeoutUs);

@@ -168,17 +168,21 @@ public class MediaTranscoderEngine {
         if (videoOutputFormat == null) {
             mVideoTrackTranscoder = new PassThroughTrackTranscoder(mExtractor, trackResult.mVideoTrackIndex, queuedMuxer, QueuedMuxer.SampleType.VIDEO);
         } else {
-            mVideoTrackTranscoder = new VideoTrackTranscoder(mExtractor, trackResult.mVideoTrackIndex, videoOutputFormat, queuedMuxer);
+            mVideoTrackTranscoder = new VideoTrackTranscoderAdvance(mExtractor, trackResult.mVideoTrackIndex, videoOutputFormat, queuedMuxer);
         }
-        //setConfig
-        if(mVideoTrackTranscoder instanceof VideoTrackTranscoder && config != null){
-            ((VideoTrackTranscoder)mVideoTrackTranscoder).setRenderConfig(config);
+        //setConfig video
+        if(mVideoTrackTranscoder instanceof VideoTrackTranscoderAdvance && config != null){
+            ((VideoTrackTranscoderAdvance)mVideoTrackTranscoder).setRenderConfig(config);
         }
         mVideoTrackTranscoder.setup();
         if (audioOutputFormat == null) {
             mAudioTrackTranscoder = new PassThroughTrackTranscoder(mExtractor, trackResult.mAudioTrackIndex, queuedMuxer, QueuedMuxer.SampleType.AUDIO);
         } else {
-            mAudioTrackTranscoder = new AudioTrackTranscoder(mExtractor, trackResult.mAudioTrackIndex, audioOutputFormat, queuedMuxer);
+            mAudioTrackTranscoder = new AudioTrackTranscoderUgly(mExtractor, trackResult.mAudioTrackIndex, audioOutputFormat, queuedMuxer);
+        }
+        //setConfig audio
+        if(mAudioTrackTranscoder instanceof AudioTrackTranscoderUgly && config != null){
+            ((AudioTrackTranscoderUgly)mAudioTrackTranscoder).setRenderConfig(config);
         }
         mAudioTrackTranscoder.setup();
         mExtractor.selectTrack(trackResult.mVideoTrackIndex);

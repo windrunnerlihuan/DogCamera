@@ -67,7 +67,7 @@ public class VideoUtils {
             Log.e(TAG, "can not found video&audio format");
             return false;
         }
-        MediaMuxer mediaMuxer = null;
+        MediaMuxer mediaMuxer;
         try {
             mediaMuxer = new MediaMuxer(outPath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4);
         } catch (IOException e) {

@@ -14,11 +14,11 @@ import java.util.Queue;
 /**
  * Channel of raw audio from decoder to encoder.
  * Performs the necessary conversion between different input & output audio formats.
- *
+ * <p>
  * We currently support upmixing from mono to stereo & downmixing from stereo to mono.
  * Sample rate conversion is not supported yet.
  */
-class AudioChannelAdvance {
+class AudioChannelUgly {
 
     private static class AudioBuffer {
         int bufferIndex;
@@ -31,8 +31,8 @@ class AudioChannelAdvance {
     private static final int BYTES_PER_SHORT = 2;
     private static final long MICROSECS_PER_SEC = 1000000;
 
-    private final Queue<AudioBuffer> mEmptyBuffers = new ArrayDeque<>();
-    private final Queue<AudioBuffer> mFilledBuffers = new ArrayDeque<>();
+    private final ArrayDeque<AudioBuffer> mEmptyBuffers = new ArrayDeque<>();
+    private final ArrayDeque<AudioBuffer> mFilledBuffers = new ArrayDeque<>();
 
     private final MediaCodec mDecoder;
     private final MediaCodec mEncoder;
@@ -57,14 +57,13 @@ class AudioChannelAdvance {
     private MediaCodecBufferCompatWrapper mSugarDecoderBuffers;
     private int mSugarInputSampleRate;
     private int mSugarInputChannelCount;
-    private AudioRemixer mSugarRemixer;
-    private final AudioBuffer mSugarOverflowBuffer = new AudioBuffer();
-    private final Queue<AudioBuffer> mSugarEmptyBuffers = new ArrayDeque<>();
-    private final Queue<AudioBuffer> mSugarFilledBuffers = new ArrayDeque<>();
+    private AudioRemixer mConvertSugarToInputRemixer;
+    private final ArrayDeque<AudioBuffer> mSugarFilledBuffers = new ArrayDeque<>();
+    private static final int MIX_OVERFLOW_BUFFER_INDEX = Integer.MIN_VALUE;
 
 
-    public AudioChannelAdvance(final MediaCodec decoder,
-                               final MediaCodec encoder, final MediaFormat encodeFormat) {
+    public AudioChannelUgly(final MediaCodec decoder,
+                            final MediaCodec encoder, final MediaFormat encodeFormat) {
         mDecoder = decoder;
         mEncoder = encoder;
         mEncodeFormat = encodeFormat;
@@ -73,9 +72,9 @@ class AudioChannelAdvance {
         mEncoderBuffers = new MediaCodecBufferCompatWrapper(mEncoder);
     }
 
-    public void setSugarConfig(MediaCodec decoder, MediaFormat decodeFormat){
+    public void setSugarConfig(MediaCodec decoder) {
         mSugarDecoder = decoder;
-        mSugarDecoderBuffers = new MediaCodecBufferCompatWrapper(mDecoder);
+        mSugarDecoderBuffers = new MediaCodecBufferCompatWrapper(mSugarDecoder);
     }
 
     public void setActualDecodedFormat(final MediaFormat decodedFormat) {
@@ -108,7 +107,7 @@ class AudioChannelAdvance {
         mOverflowBuffer.presentationTimeUs = 0;
     }
 
-    public void setSuagrActualDecodedFormat(final MediaFormat decodedFormat){
+    public void setSuagrActualDecodedFormat(final MediaFormat decodedFormat) {
         mSugarActualDecodedFormat = decodedFormat;
 
         mSugarInputSampleRate = mSugarActualDecodedFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE);
@@ -127,15 +126,14 @@ class AudioChannelAdvance {
             throw new UnsupportedOperationException("Output channel count (" + mOutputChannelCount + ") not supported.");
         }
 
-        if (mSugarInputChannelCount > mOutputChannelCount) {
-            mSugarRemixer = AudioRemixer.DOWNMIX;
-        } else if (mSugarInputChannelCount < mOutputChannelCount) {
-            mSugarRemixer = AudioRemixer.UPMIX;
+        if (mSugarInputChannelCount > mInputChannelCount) {
+            mConvertSugarToInputRemixer = AudioRemixer.DOWNMIX;
+        } else if (mSugarInputChannelCount < mInputChannelCount) {
+            mConvertSugarToInputRemixer = AudioRemixer.UPMIX;
         } else {
-            mSugarRemixer = AudioRemixer.PASSTHROUGH;
+            mConvertSugarToInputRemixer = AudioRemixer.PASSTHROUGH;
         }
 
-        mSugarOverflowBuffer.presentationTimeUs = 0;
     }
 
     public void drainDecoderBufferAndQueue(final int bufferIndex, final long presentationTimeUs) {
@@ -176,7 +174,7 @@ class AudioChannelAdvance {
                 bufferIndex == BUFFER_INDEX_END_OF_STREAM ?
                         null : mSugarDecoderBuffers.getOutputBuffer(bufferIndex);
 
-        AudioBuffer buffer = mSugarEmptyBuffers.poll();
+        AudioBuffer buffer = mEmptyBuffers.poll();
         if (buffer == null) {
             buffer = new AudioBuffer();
         }
@@ -185,17 +183,20 @@ class AudioChannelAdvance {
         buffer.presentationTimeUs = presentationTimeUs;
         buffer.data = data == null ? null : data.asShortBuffer();
 
-        if (mSugarOverflowBuffer.data == null) {
-            mSugarOverflowBuffer.data = ByteBuffer
-                    .allocateDirect(data.capacity())
-                    .order(ByteOrder.nativeOrder())
-                    .asShortBuffer();
-            mSugarOverflowBuffer.data.clear().flip();
+        if (mOverflowBuffer.data != null) {
+            int oldCapacity = mOverflowBuffer.data.capacity();
+            if (data.capacity() > oldCapacity) {
+                mOverflowBuffer.data.clear();
+                mOverflowBuffer.data = ByteBuffer
+                        .allocateDirect(data.capacity())
+                        .order(ByteOrder.nativeOrder())
+                        .asShortBuffer();
+                mOverflowBuffer.data.clear().flip();
+            }
         }
 
         mSugarFilledBuffers.add(buffer);
     }
-
 
 
     public boolean feedEncoder(long timeoutUs) {
@@ -234,6 +235,134 @@ class AudioChannelAdvance {
         if (inBuffer != null) {
             mDecoder.releaseOutputBuffer(inBuffer.bufferIndex, false);
             mEmptyBuffers.add(inBuffer);
+        }
+
+        return true;
+    }
+
+    public boolean feedEncoderWithSuagr(long timeoutUs) {
+        final boolean hasOverflow = mOverflowBuffer.data != null && mOverflowBuffer.data.hasRemaining();
+        if (mFilledBuffers.isEmpty() && !hasOverflow) {
+            // No audio data - Bail out
+            return false;
+        }
+
+        final int encoderInBuffIndex = mEncoder.dequeueInputBuffer(timeoutUs);
+        if (encoderInBuffIndex < 0) {
+            // Encoder is full - Bail out
+            return false;
+        }
+
+        // Drain overflow first
+        final ShortBuffer outBuffer = mEncoderBuffers.getInputBuffer(encoderInBuffIndex).asShortBuffer();
+        if (hasOverflow) {
+            final long presentationTimeUs = drainOverflow(outBuffer);
+            mEncoder.queueInputBuffer(encoderInBuffIndex,
+                    0, outBuffer.position() * BYTES_PER_SHORT,
+                    presentationTimeUs, 0);
+            return true;
+        }
+        final AudioBuffer srcBuffer = mFilledBuffers.poll();
+        if (srcBuffer.bufferIndex == BUFFER_INDEX_END_OF_STREAM) {
+            mEncoder.queueInputBuffer(encoderInBuffIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+            return false;
+        }
+        if (mSugarFilledBuffers.isEmpty()) {
+            // No sugar data - don't mix
+            return false;
+        }
+        final AudioBuffer sugarBuffer = mSugarFilledBuffers.poll();
+        int srcCapacity = srcBuffer.data.remaining();
+        int sugarCapacity = sugarBuffer.data.remaining();
+        int minBufferReadNum = Math.min(srcCapacity, sugarCapacity);
+
+        sugarBuffer.data.clear();
+        ShortBuffer convertSugarShortBuffer = ByteBuffer.allocate(sugarCapacity * BYTES_PER_SHORT).order(ByteOrder.nativeOrder()).asShortBuffer();
+        mConvertSugarToInputRemixer.remix(sugarBuffer.data, convertSugarShortBuffer);
+        convertSugarShortBuffer.flip();
+
+        srcBuffer.data.clear();
+        ShortBuffer srcShortBuffer = srcBuffer.data;
+
+        ShortBuffer mixInBuffer = ByteBuffer.allocate(minBufferReadNum * BYTES_PER_SHORT).order(ByteOrder.nativeOrder()).asShortBuffer();
+        for (int i = 0; i < minBufferReadNum; i++) {
+            int a = srcShortBuffer.get();
+            int b = convertSugarShortBuffer.get();
+            short result;
+            if (a < 0 && b < 0) {
+                int i1 = a + b - a * b / (-32768);
+                if (i1 > 32767) {
+                    result = 32767;
+                } else if (i1 < -32768) {
+                    result = -32768;
+                } else {
+                    result = (short) i1;
+                }
+            } else if (a > 0 && b > 0) {
+                int i1 = a + b - a * b / 32767;
+                if (i1 > 32767) {
+                    result = 32767;
+                } else if (i1 < -32768) {
+                    result = -32768;
+                } else {
+                    result = (short) i1;
+                }
+            } else {
+                int i1 = a + b;
+                if (i1 > 32767) {
+                    result = 32767;
+                } else if (i1 < -32768) {
+                    result = -32768;
+                } else {
+                    result = (short) i1;
+                }
+            }
+            mixInBuffer.put(result);
+        }
+        int mixOverFlowNum = srcCapacity - sugarCapacity;
+        if (mixOverFlowNum != 0) {
+            ShortBuffer remixOverFlowBuffer = ByteBuffer.allocate(Math.abs(mixOverFlowNum) * BYTES_PER_SHORT).order(ByteOrder.nativeOrder()).asShortBuffer();
+            ShortBuffer maxShortBuffer = mixOverFlowNum > 0 ? srcShortBuffer : convertSugarShortBuffer;
+            remixOverFlowBuffer.put(maxShortBuffer);
+
+            AudioBuffer buffer = mEmptyBuffers.poll();
+            if (buffer == null) {
+                buffer = new AudioBuffer();
+            }
+            final long consumedDurationUs =
+                    sampleCountToDurationUs(maxShortBuffer.position(),
+                            mixOverFlowNum > 0 ? mInputSampleRate : mSugarInputSampleRate,
+                            mixOverFlowNum > 0 ? mInputChannelCount : mSugarInputChannelCount);
+            remixOverFlowBuffer.flip();
+            buffer.data = remixOverFlowBuffer;
+            buffer.bufferIndex = MIX_OVERFLOW_BUFFER_INDEX;
+            buffer.presentationTimeUs = (mixOverFlowNum > 0 ? srcBuffer : sugarBuffer).presentationTimeUs + consumedDurationUs;
+            if (mixOverFlowNum > 0) {
+                mFilledBuffers.addFirst(buffer);
+            } else {
+                mSugarFilledBuffers.addFirst(buffer);
+            }
+
+
+        }
+
+        AudioBuffer inBuffer = mEmptyBuffers.poll();
+        if(inBuffer == null) inBuffer = new AudioBuffer();
+        inBuffer.bufferIndex = srcBuffer.bufferIndex;
+        inBuffer.presentationTimeUs = srcBuffer.presentationTimeUs;
+        inBuffer.data = mixInBuffer;
+
+        final long presentationTimeUs = remixAndMaybeFillOverflow(inBuffer, outBuffer);
+        mEncoder.queueInputBuffer(encoderInBuffIndex,
+                0, outBuffer.position() * BYTES_PER_SHORT,
+                presentationTimeUs, 0);
+        if (srcBuffer != null && srcBuffer.bufferIndex != MIX_OVERFLOW_BUFFER_INDEX) {
+            mDecoder.releaseOutputBuffer(srcBuffer.bufferIndex, false);
+            mEmptyBuffers.add(srcBuffer);
+        }
+        if (sugarBuffer != null && sugarBuffer.bufferIndex != MIX_OVERFLOW_BUFFER_INDEX) {
+            mSugarDecoder.releaseOutputBuffer(sugarBuffer.bufferIndex, false);
+            mEmptyBuffers.add(sugarBuffer);
         }
 
         return true;

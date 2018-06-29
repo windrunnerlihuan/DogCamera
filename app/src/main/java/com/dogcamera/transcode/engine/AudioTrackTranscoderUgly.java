@@ -1,6 +1,7 @@
 package com.dogcamera.transcode.engine;
 
 import android.annotation.TargetApi;
+import android.content.res.AssetFileDescriptor;
 import android.media.MediaCodec;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
@@ -11,10 +12,13 @@ import com.dogcamera.DogApplication;
 import com.dogcamera.transcode.compat.MediaCodecBufferCompatWrapper;
 import com.dogcamera.utils.VideoUtils;
 
-import java.io.FileDescriptor;
 import java.io.IOException;
 
-public class AudioTrackTranscoderAdvance implements TrackTranscoder {
+/**
+ * 混音的类，但是这种实现方式不好，容易出bug，也比较耗内存。后期决定废弃这个类，将混音功能单独提出来。
+ */
+@Deprecated
+public class AudioTrackTranscoderUgly implements TrackTranscoder {
 
     private static final QueuedMuxer.SampleType SAMPLE_TYPE = QueuedMuxer.SampleType.AUDIO;
 
@@ -44,7 +48,7 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
     private boolean mDecoderStarted;
     private boolean mEncoderStarted;
 
-    private AudioChannelAdvance mAudioChannelAdvance;
+    private AudioChannelUgly mAudioChannelUgly;
 
     //混音配置相关变量如下
     private RenderConfig mRenderConfig;
@@ -57,8 +61,8 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
     private boolean mIsSurgarDecoderEOS;
     private final MediaCodec.BufferInfo mSugarBufferInfo = new MediaCodec.BufferInfo();
 
-    public AudioTrackTranscoderAdvance(MediaExtractor extractor, int trackIndex,
-                                       MediaFormat outputFormat, QueuedMuxer muxer) {
+    public AudioTrackTranscoderUgly(MediaExtractor extractor, int trackIndex,
+                                    MediaFormat outputFormat, QueuedMuxer muxer) {
         mExtractor = extractor;
         mTrackIndex = trackIndex;
         mOutputFormat = outputFormat;
@@ -98,7 +102,7 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
         mDecoderStarted = true;
         mDecoderBuffers = new MediaCodecBufferCompatWrapper(mDecoder);
 
-        mAudioChannelAdvance = new AudioChannelAdvance(mDecoder, mEncoder, mOutputFormat);
+        mAudioChannelUgly = new AudioChannelUgly(mDecoder, mEncoder, mOutputFormat);
         //处理混音文件
         setupSugar();
     }
@@ -106,10 +110,10 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
     private boolean createSugarExtractor(){
         releaseSugarExtractor();
         mSugarExtractor = new MediaExtractor();
-        FileDescriptor fd;
+        AssetFileDescriptor afd;
         try {
-            fd = DogApplication.getInstance().getAssets().openFd(mRenderConfig.audioPath).getFileDescriptor();
-            mSugarExtractor.setDataSource(fd);
+            afd = DogApplication.getInstance().getAssets().openFd(mRenderConfig.audioPath);
+            mSugarExtractor.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
         } catch (IOException e) {
             e.printStackTrace();
             releaseSugarExtractor();
@@ -143,6 +147,8 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
             mSugarDecoderBuffers = new MediaCodecBufferCompatWrapper(mSugarDecoder);
         }
 
+        mAudioChannelUgly.setSugarConfig(mSugarDecoder);
+
     }
 
     @Override
@@ -158,12 +164,14 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
         while (drainEncoder(0) != DRAIN_STATE_NONE) busy = true;
         do {
             status = drainDecoder(0);
+            status = drainSugarDecoder(0);
             if (status != DRAIN_STATE_NONE) busy = true;
             // NOTE: not repeating to keep from deadlock when encoder is full.
         } while (status == DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY);
 
-        while (mAudioChannelAdvance.feedEncoder(0)) busy = true;
+        while (mAudioChannelUgly.feedEncoderWithSuagr(0)) busy = true;
         while (drainExtractor(0) != DRAIN_STATE_NONE) busy = true;
+        while (drainSugarExtractor(0) != DRAIN_STATE_NONE) busy = true;
 
         return busy;
     }
@@ -179,6 +187,7 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
         if (result < 0) return DRAIN_STATE_NONE;
         if (trackIndex < 0) {
             mIsExtractorEOS = true;
+            mIsSurgarExtractorEOS = true;
             mDecoder.queueInputBuffer(result, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
             return DRAIN_STATE_NONE;
         }
@@ -218,16 +227,17 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
             case MediaCodec.INFO_TRY_AGAIN_LATER:
                 return DRAIN_STATE_NONE;
             case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
-                mAudioChannelAdvance.setActualDecodedFormat(mDecoder.getOutputFormat());
+                mAudioChannelUgly.setActualDecodedFormat(mDecoder.getOutputFormat());
             case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
                 return DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY;
         }
 
         if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
             mIsDecoderEOS = true;
-            mAudioChannelAdvance.drainDecoderBufferAndQueue(AudioChannel.BUFFER_INDEX_END_OF_STREAM, 0);
+            mIsSurgarDecoderEOS = true;
+            mAudioChannelUgly.drainDecoderBufferAndQueue(AudioChannel.BUFFER_INDEX_END_OF_STREAM, 0);
         } else if (mBufferInfo.size > 0) {
-            mAudioChannelAdvance.drainDecoderBufferAndQueue(result, mBufferInfo.presentationTimeUs);
+            mAudioChannelUgly.drainDecoderBufferAndQueue(result, mBufferInfo.presentationTimeUs);
         }
 
         return DRAIN_STATE_CONSUMED;
@@ -242,14 +252,14 @@ public class AudioTrackTranscoderAdvance implements TrackTranscoder {
                 return DRAIN_STATE_NONE;
             case MediaCodec.INFO_OUTPUT_FORMAT_CHANGED:
                 //TODO setSugarActualDecodedFormat
-                mAudioChannelAdvance.setSuagrActualDecodedFormat(mSugarDecoder.getOutputFormat());
+                mAudioChannelUgly.setSuagrActualDecodedFormat(mSugarDecoder.getOutputFormat());
             case MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED:
                 return DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY;
         }
 
         if (mSugarBufferInfo.size > 0) {
             //TODO drainDecoderBufferAndQueue
-            mAudioChannelAdvance.drainSugarDecoderBufferAndQueue(result, mSugarBufferInfo.presentationTimeUs);
+            mAudioChannelUgly.drainSugarDecoderBufferAndQueue(result, mSugarBufferInfo.presentationTimeUs);
         }
         return DRAIN_STATE_CONSUMED;
 

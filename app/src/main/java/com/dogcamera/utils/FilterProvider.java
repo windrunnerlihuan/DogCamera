@@ -16,6 +16,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
+/**
+ * 滤镜信息提供累，但是没有静态化，因此不适合全局使用，后期会逐渐废弃。
+ */
 @Deprecated
 public class FilterProvider {
 
