@@ -236,14 +236,9 @@ public class TextureMovieEncoder implements Runnable {
             mHandler = new EncoderHandler(this);
             mReady = true;
             mReadyFence.notify();
-            System.out.println(TAG + " run" + " thread:" + Thread.currentThread() + " time:" + System.currentTimeMillis());
         }
         Looper.loop();
 
-        synchronized (mReadyFence) {
-            mReady = mRunning = false;
-            mHandler = null;
-        }
         Log.d(TAG, "Encoder thread exiting");
     }
 
@@ -254,7 +249,7 @@ public class TextureMovieEncoder implements Runnable {
         private WeakReference<TextureMovieEncoder> mWeakEncoder;
 
         public EncoderHandler(TextureMovieEncoder encoder) {
-            mWeakEncoder = new WeakReference<TextureMovieEncoder>(encoder);
+            mWeakEncoder = new WeakReference<>(encoder);
         }
 
         @Override  // runs on encoder thread

@@ -61,7 +61,6 @@ class AudioChannelUgly {
     private final ArrayDeque<AudioBuffer> mSugarFilledBuffers = new ArrayDeque<>();
     private static final int MIX_OVERFLOW_BUFFER_INDEX = Integer.MIN_VALUE;
 
-
     public AudioChannelUgly(final MediaCodec decoder,
                             final MediaCodec encoder, final MediaFormat encodeFormat) {
         mDecoder = decoder;
@@ -75,6 +74,7 @@ class AudioChannelUgly {
     public void setSugarConfig(MediaCodec decoder) {
         mSugarDecoder = decoder;
         mSugarDecoderBuffers = new MediaCodecBufferCompatWrapper(mSugarDecoder);
+
     }
 
     public void setActualDecodedFormat(final MediaFormat decodedFormat) {
