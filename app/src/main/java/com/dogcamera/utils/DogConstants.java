@@ -6,6 +6,8 @@ public class DogConstants {
     public static final int PREVIEW_KEY_CHART = 2;
     public static final int PREVIEW_KEY_EFFECT = 3;
 
+    public static final int PREVIEW_KEY_ORIGIN_MUTE = 10;
+
     public static final int TRANSCODE_TIMEOUT = -1;
 
 }

@@ -229,6 +229,11 @@ public class PreviewActivity extends BaseActivity {
                                 .setOutputWidth(mVideoView.getImageWidth())
                                 .setOutputHeight(mVideoView.getImageHeight())
                                 .setAudioPath((String) retPropSet.get(DogConstants.PREVIEW_KEY_MUSIC))
+                                .setOriginMute(
+                                        retPropSet.get(DogConstants.PREVIEW_KEY_ORIGIN_MUTE) != null ?
+                                                (Boolean) retPropSet.get(DogConstants.PREVIEW_KEY_ORIGIN_MUTE) :
+                                                false
+                                )
                                 .build(),
                         new MediaTranscoder.Listener() {
                     @Override

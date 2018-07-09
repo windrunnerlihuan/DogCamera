@@ -17,6 +17,29 @@ import java.util.Queue;
  * <p>
  * We currently support upmixing from mono to stereo & downmixing from stereo to mono.
  * Sample rate conversion is not supported yet.
+ *
+ *
+ *
+ * _ooOoo_
+ * o8888888o
+ * 88" . "88
+ * (| -_- |)
+ *  O\ = /O
+ * ___/`---'\____
+ * .   ' \\| |// `.
+ * / \\||| : |||// \
+ * / _||||| -:- |||||- \
+ * | | \\\ - /// | |
+ * | \_| ''\---/'' | |
+ * \ .-\__ `-` ___/-. /
+ * ___`. .' /--.--\ `. . __
+ * ."" '< `.___\_<|>_/___.' >'"".
+ * | | : `- \`.;`\ _ /`;.`/ - ` : | |
+ * \ \ `-. \_ __\ /__ _/ .-` / /
+ * ======`-.____`-.___\_____/___.-`____.-'======
+ * `=---='
+ *          .............................................
+ *           佛曰：bug泛滥，我已瘫痪！
  */
 class AudioChannelUgly {
 
@@ -107,7 +130,7 @@ class AudioChannelUgly {
         mOverflowBuffer.presentationTimeUs = 0;
     }
 
-    public void setSuagrActualDecodedFormat(final MediaFormat decodedFormat) {
+    public void setSuagrActualDecodedFormat(final MediaFormat decodedFormat, boolean onlySugar) {
         mSugarActualDecodedFormat = decodedFormat;
 
         mSugarInputSampleRate = mSugarActualDecodedFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE);
@@ -126,13 +149,24 @@ class AudioChannelUgly {
             throw new UnsupportedOperationException("Output channel count (" + mOutputChannelCount + ") not supported.");
         }
 
-        if (mSugarInputChannelCount > mInputChannelCount) {
-            mConvertSugarToInputRemixer = AudioRemixer.DOWNMIX;
-        } else if (mSugarInputChannelCount < mInputChannelCount) {
-            mConvertSugarToInputRemixer = AudioRemixer.UPMIX;
-        } else {
-            mConvertSugarToInputRemixer = AudioRemixer.PASSTHROUGH;
+        if(!onlySugar){
+            if (mSugarInputChannelCount > mInputChannelCount) {
+                mConvertSugarToInputRemixer = AudioRemixer.DOWNMIX;
+            } else if (mSugarInputChannelCount < mInputChannelCount) {
+                mConvertSugarToInputRemixer = AudioRemixer.UPMIX;
+            } else {
+                mConvertSugarToInputRemixer = AudioRemixer.PASSTHROUGH;
+            }
+        }else{
+            if (mSugarInputChannelCount > mOutputChannelCount) {
+                mRemixer = AudioRemixer.DOWNMIX;
+            } else if (mSugarInputChannelCount < mOutputChannelCount) {
+                mRemixer = AudioRemixer.UPMIX;
+            } else {
+                mRemixer = AudioRemixer.PASSTHROUGH;
+            }
         }
+
 
     }
 
@@ -199,9 +233,15 @@ class AudioChannelUgly {
     }
 
 
-    public boolean feedEncoder(long timeoutUs) {
+    public boolean feedEncoder(long timeoutUs, boolean isSugar) {
+        ArrayDeque<AudioBuffer> filledBufferstarget = mFilledBuffers;
+        MediaCodec decoderTarget = mDecoder;
+        if(isSugar){
+            filledBufferstarget = mSugarFilledBuffers;
+            decoderTarget = mSugarDecoder;
+        }
         final boolean hasOverflow = mOverflowBuffer.data != null && mOverflowBuffer.data.hasRemaining();
-        if (mFilledBuffers.isEmpty() && !hasOverflow) {
+        if (filledBufferstarget.isEmpty() && !hasOverflow) {
             // No audio data - Bail out
             return false;
         }
@@ -222,7 +262,7 @@ class AudioChannelUgly {
             return true;
         }
 
-        final AudioBuffer inBuffer = mFilledBuffers.poll();
+        final AudioBuffer inBuffer = filledBufferstarget.poll();
         if (inBuffer.bufferIndex == BUFFER_INDEX_END_OF_STREAM) {
             mEncoder.queueInputBuffer(encoderInBuffIndex, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
             return false;
@@ -233,7 +273,7 @@ class AudioChannelUgly {
                 0, outBuffer.position() * BYTES_PER_SHORT,
                 presentationTimeUs, 0);
         if (inBuffer != null) {
-            mDecoder.releaseOutputBuffer(inBuffer.bufferIndex, false);
+            decoderTarget.releaseOutputBuffer(inBuffer.bufferIndex, false);
             mEmptyBuffers.add(inBuffer);
         }
 
@@ -290,21 +330,17 @@ class AudioChannelUgly {
             int b = convertSugarShortBuffer.get();
             short result;
             if (a < 0 && b < 0) {
-                int i1 = a + b - a * b / (-32768);
-                if (i1 > 32767) {
-                    result = 32767;
-                } else if (i1 < -32768) {
+                int i1 = a + b ;
+                if (i1 < -32768) {
                     result = -32768;
-                } else {
+                }else{
                     result = (short) i1;
                 }
             } else if (a > 0 && b > 0) {
-                int i1 = a + b - a * b / 32767;
+                int i1 = a + b;
                 if (i1 > 32767) {
                     result = 32767;
-                } else if (i1 < -32768) {
-                    result = -32768;
-                } else {
+                }else{
                     result = (short) i1;
                 }
             } else {

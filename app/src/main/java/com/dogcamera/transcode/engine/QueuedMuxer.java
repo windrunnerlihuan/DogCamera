@@ -37,11 +37,13 @@ public class QueuedMuxer {
     private final Listener mListener;
     private MediaFormat mVideoFormat;
     private MediaFormat mAudioFormat;
-    private int mVideoTrackIndex;
-    private int mAudioTrackIndex;
+    private int mVideoTrackIndex = -1;
+    private int mAudioTrackIndex = -1;
     private ByteBuffer mByteBuffer;
     private final List<SampleInfo> mSampleInfoList;
     private boolean mStarted;
+    private int mTrackCount;
+    private static final int TRACK_MAX_COUNT = 2;
 
     public QueuedMuxer(MediaMuxer muxer, Listener listener) {
         mMuxer = muxer;
@@ -54,9 +56,11 @@ public class QueuedMuxer {
         switch (sampleType) {
             case VIDEO:
                 mVideoFormat = format;
+                mTrackCount++;
                 break;
             case AUDIO:
                 mAudioFormat = format;
+                mTrackCount++;
                 break;
             default:
                 throw new AssertionError();
@@ -66,13 +70,19 @@ public class QueuedMuxer {
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     private void onSetOutputFormat() {
+        /*
         if (mVideoFormat == null || mAudioFormat == null) return;
+        */
+        if(mTrackCount < TRACK_MAX_COUNT) return;
         mListener.onDetermineOutputFormat();
-
-        mVideoTrackIndex = mMuxer.addTrack(mVideoFormat);
-        Log.v(TAG, "Added track #" + mVideoTrackIndex + " with " + mVideoFormat.getString(MediaFormat.KEY_MIME) + " to muxer");
-        mAudioTrackIndex = mMuxer.addTrack(mAudioFormat);
-        Log.v(TAG, "Added track #" + mAudioTrackIndex + " with " + mAudioFormat.getString(MediaFormat.KEY_MIME) + " to muxer");
+        if(mVideoFormat != null) {
+            mVideoTrackIndex = mMuxer.addTrack(mVideoFormat);
+            Log.v(TAG, "Added track #" + mVideoTrackIndex + " with " + mVideoFormat.getString(MediaFormat.KEY_MIME) + " to muxer");
+        }
+        if(mAudioFormat != null){
+            mAudioTrackIndex = mMuxer.addTrack(mAudioFormat);
+            Log.v(TAG, "Added track #" + mAudioTrackIndex + " with " + mAudioFormat.getString(MediaFormat.KEY_MIME) + " to muxer");
+        }
         mMuxer.start();
         mStarted = true;
 

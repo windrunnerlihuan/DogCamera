@@ -119,7 +119,6 @@ public class AudioEncoderCore extends MediaEncoderCore implements Runnable {
 
     @Override
     public void run() {
-        Log.d(TAG, "音频采集线程start");
         while (mRecording) {
             drainEncoder(false);
             drainAudio(false);
@@ -136,8 +135,6 @@ public class AudioEncoderCore extends MediaEncoderCore implements Runnable {
         drainEncoder(true);
 
         release();
-
-        Log.d(TAG, "音频采集线程stop");
     }
 
     private void drainAudio(boolean endOfStream) {

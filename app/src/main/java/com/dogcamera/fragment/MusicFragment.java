@@ -49,9 +49,15 @@ public class MusicFragment extends BaseFragment implements PreviewRestartParams.
         mMusicOrginView.setImg(R.mipmap.preview_music_origin_off, R.mipmap.preview_music_origin_on);
         mMusicOrginView.setTv("原声OFF", "原声ON");
         mMusicOrginView.setSelected(true);
-        mMusicOrginView.setOnItemClickListener(afteSselected -> sendToRestart(new PreviewRestartParams.Builder()
-                .setIsMute(!afteSselected)
-                .build()));
+        mRetPropSet.put(DogConstants.PREVIEW_KEY_ORIGIN_MUTE, false);
+        mMusicOrginView.setOnItemClickListener(afteSselected -> {
+            mRetPropSet.put(DogConstants.PREVIEW_KEY_ORIGIN_MUTE, !afteSselected);
+            sendToRestart(new PreviewRestartParams.Builder()
+                    .setIsMute(!afteSselected)
+                    .setIsNotify(true)
+                    .build());
+        });
+
         createRecycler();
 
     }
@@ -72,11 +78,11 @@ public class MusicFragment extends BaseFragment implements PreviewRestartParams.
         adapter.setOnItemClickListener((parent, view, position, id) -> {
             //TODO onItemClick
             String path = mAudioItems.get(position).path;
-            if("XXX".equalsIgnoreCase(path)){
+            if ("XXX".equalsIgnoreCase(path)) {
                 Toast.makeText(getContext(), "主人很懒，暂时不想开发新功能～。～", Toast.LENGTH_SHORT).show();
                 mAudioProvider.startPlay(null);
                 mRetPropSet.put(DogConstants.PREVIEW_KEY_MUSIC, null);
-            }else{
+            } else {
                 mAudioProvider.startPlay(path);
                 mRetPropSet.put(DogConstants.PREVIEW_KEY_MUSIC, path);
             }
@@ -100,8 +106,8 @@ public class MusicFragment extends BaseFragment implements PreviewRestartParams.
         return mRetPropSet;
     }
 
-    private void sendToRestart(PreviewRestartParams params){
-        if(getActivity() != null && getActivity() instanceof PreviewActivity){
+    private void sendToRestart(PreviewRestartParams params) {
+        if (getActivity() != null && getActivity() instanceof PreviewActivity) {
             PreviewActivity activity = (PreviewActivity) getActivity();
             activity.restartPlay(params);
         }
@@ -110,7 +116,7 @@ public class MusicFragment extends BaseFragment implements PreviewRestartParams.
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mAudioProvider != null){
+        if (mAudioProvider != null) {
             mAudioProvider.exitPlay();
         }
     }

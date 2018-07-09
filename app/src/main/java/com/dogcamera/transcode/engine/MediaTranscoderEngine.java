@@ -182,6 +182,7 @@ public class MediaTranscoderEngine {
         }
         //setConfig audio
         if(mAudioTrackTranscoder instanceof AudioTrackTranscoderUgly && config != null){
+            config.duration = mDurationUs;
             ((AudioTrackTranscoderUgly)mAudioTrackTranscoder).setRenderConfig(config);
         }
         mAudioTrackTranscoder.setup();
