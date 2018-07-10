@@ -364,7 +364,7 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
                 return DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY;
         }
 
-        if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
+        if ((mSugarBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
             //one time sugar EOS
             mAudioChannelUgly.drainSugarDecoderBufferAndQueue(AudioChannel.BUFFER_INDEX_END_OF_STREAM, 0);
         } else if (mSugarBufferInfo.size > 0) {
