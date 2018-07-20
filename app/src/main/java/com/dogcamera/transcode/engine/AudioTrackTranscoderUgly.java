@@ -273,7 +273,9 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
     private int drainExtractor(long timeoutUs) {
         if (mIsExtractorEOS) return DRAIN_STATE_NONE;
         int trackIndex = mExtractor.getSampleTrackIndex();
-        if (trackIndex >= 0 && trackIndex != mTrackIndex) {
+
+        //用了sugar之后，trackIndex会不匹配
+        if(trackIndex >= 0 && trackIndex != mTrackIndex) {
             return DRAIN_STATE_NONE;
         }
 
@@ -296,33 +298,36 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
     private int drainSugarExtractor(long timeoutUs){
         if(mIsSurgarExtractorEOS) return DRAIN_STATE_NONE;
         int trackIndex = mSugarExtractor.getSampleTrackIndex();
+        //用了sugar之后，trackIndex会不匹配
         if(trackIndex >= 0 && trackIndex != mSurgarTrackIndex) {
             return DRAIN_STATE_NONE;
         }
+
         final int result = mSugarDecoder.dequeueInputBuffer(timeoutUs);
         if(result < 0) return DRAIN_STATE_NONE;
+
+        //如果解析长度超过了视频总时长，就不再读取
+        long processPTS = mSugarDuration * mSugarExtractLoopCount + mSugarExtractor.getSampleTime();
+        if (processPTS >= mMixDuration) {
+            mIsSurgarExtractorEOS = true;
+            mSugarDecoder.queueInputBuffer(result, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
+
+            return DRAIN_STATE_NONE;
+        }
         /** 读取完毕后，重新从头读取 */
         if(trackIndex < 0){
             //one time sugar EOS
-            mDecoder.queueInputBuffer(result, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
             mSugarExtractLoopCount += 1;
             //读取完毕后，重新从头读取
             createSugarExtractor();
             mSugarExtractor.selectTrack(mSurgarTrackIndex);
-            return DRAIN_STATE_NONE;
         }
 
         final int sampleSize = mSugarExtractor.readSampleData(mSugarDecoderBuffers.getInputBuffer(result), 0);
         final boolean isKeyFrame = (mSugarExtractor.getSampleFlags() & MediaExtractor.SAMPLE_FLAG_SYNC) != 0;
         mSugarDecoder.queueInputBuffer(result,  0, sampleSize, mSugarExtractor.getSampleTime(), isKeyFrame ? MediaCodec.BUFFER_FLAG_SYNC_FRAME : 0);
         mSugarExtractor.advance();
-        //如果解析长度超过了视频总时长，就不再读取
-        long processPTS = mSugarDuration * mSugarExtractLoopCount + mSugarExtractor.getSampleTime();
-        if (processPTS >= mMixDuration) {
-            mIsSurgarExtractorEOS = true;
-            return DRAIN_STATE_NONE;
-        }
-        return DRAIN_STATE_CONSUMED;
+        return DRAIN_STATE_NONE;
     }
 
     private int drainDecoder(long timeoutUs) {
@@ -367,6 +372,7 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         if ((mSugarBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
             //one time sugar EOS
             mAudioChannelUgly.drainSugarDecoderBufferAndQueue(AudioChannel.BUFFER_INDEX_END_OF_STREAM, 0);
+            mIsSurgarDecoderEOS = true;
         } else if (mSugarBufferInfo.size > 0) {
             //TODO drainDecoderBufferAndQueue
             mAudioChannelUgly.drainSugarDecoderBufferAndQueue(result, mSugarBufferInfo.presentationTimeUs);
@@ -378,7 +384,6 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     private int drainEncoder(long timeoutUs) {
         if (mIsEncoderEOS) return DRAIN_STATE_NONE;
-
         int result = mEncoder.dequeueOutputBuffer(mBufferInfo, timeoutUs);
         switch (result) {
             case MediaCodec.INFO_TRY_AGAIN_LATER:

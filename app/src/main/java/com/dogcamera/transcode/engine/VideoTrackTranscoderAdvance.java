@@ -172,9 +172,11 @@ public class VideoTrackTranscoderAdvance implements TrackTranscoder {
     private int drainExtractor(long timeoutUs) {
         if (mIsExtractorEOS) return DRAIN_STATE_NONE;
         int trackIndex = mExtractor.getSampleTrackIndex();
-        if (trackIndex >= 0 && trackIndex != mTrackIndex) {
+        //用了sugar之后，trackIndex会不匹配
+        if(trackIndex >= 0 && trackIndex != mTrackIndex) {
             return DRAIN_STATE_NONE;
         }
+
         int result = mDecoder.dequeueInputBuffer(timeoutUs);
         if (result < 0) return DRAIN_STATE_NONE;
         if (trackIndex < 0) {
