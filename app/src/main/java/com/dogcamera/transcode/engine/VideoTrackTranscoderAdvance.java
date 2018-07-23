@@ -21,6 +21,7 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 
 import com.dogcamera.transcode.format.MediaFormatExtraConstants;
 
@@ -28,7 +29,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 
 // Refer: https://android.googlesource.com/platform/cts/+/lollipop-release/tests/tests/media/src/android/media/cts/ExtractDecodeEditEncodeMuxTest.java
-public class VideoTrackTranscoderAdvance implements TrackTranscoder {
+public class VideoTrackTranscoderAdvance implements TrackTranscoder, MixConfig {
     private static final String TAG = "VideoTrackTranscoderAdvance";
     private static final int DRAIN_STATE_NONE = 0;
     private static final int DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY = 1;
@@ -54,6 +55,7 @@ public class VideoTrackTranscoderAdvance implements TrackTranscoder {
     private long mWrittenPresentationTimeUs;
 
     private RenderConfig mRenderConfig;
+    private int mMixFlags = 0;
 
     public VideoTrackTranscoderAdvance(MediaExtractor extractor, int trackIndex,
                                        MediaFormat outputFormat, QueuedMuxer muxer) {
@@ -62,16 +64,21 @@ public class VideoTrackTranscoderAdvance implements TrackTranscoder {
         mOutputFormat = outputFormat;
         mMuxer = muxer;
     }
+
     /**
-     *  设置水印、滤镜等等
+     * 设置水印、滤镜等等
      */
-    public void setRenderConfig(RenderConfig config){
+    @Override
+    public void setRenderConfig(RenderConfig config) {
         mRenderConfig = config;
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Override
     public void setup() {
+        //为了处理音频musiconly、none，所以不得不在这儿先
+        processMixFlags();
+
         mExtractor.selectTrack(mTrackIndex);
         try {
             mEncoder = MediaCodec.createEncoderByType(mOutputFormat.getString(MediaFormat.KEY_MIME));
@@ -93,13 +100,13 @@ public class VideoTrackTranscoderAdvance implements TrackTranscoder {
             inputFormat.setInteger(MediaFormatExtraConstants.KEY_ROTATION_DEGREES, 0);
         }
         //设置视频图像宽高，使得后续GPUImageFilter初始化
-        if(mRenderConfig != null){
-            if(mRenderConfig.outputVideoWidth <= 0 || mRenderConfig.outputVideoHeight <= 0){
+        if (mRenderConfig != null) {
+            if (mRenderConfig.outputVideoWidth <= 0 || mRenderConfig.outputVideoHeight <= 0) {
                 mRenderConfig.outputVideoWidth = mOutputFormat.getInteger(MediaFormat.KEY_WIDTH);
                 mRenderConfig.outputVideoHeight = mOutputFormat.getInteger(MediaFormat.KEY_HEIGHT);
             }
             mDecoderOutputSurfaceWrapper = new OutputSurface(mRenderConfig);
-        }else{
+        } else {
             mDecoderOutputSurfaceWrapper = new OutputSurface();
         }
         try {
@@ -111,6 +118,20 @@ public class VideoTrackTranscoderAdvance implements TrackTranscoder {
         mDecoder.start();
         mDecoderStarted = true;
         mDecoderInputBuffers = mDecoder.getInputBuffers();
+    }
+
+    @Override
+    public void processMixFlags() {
+        if (mRenderConfig == null) {
+            mMixFlags = (mMixFlags & ~MASK_FOR_MIX) | (MIX_ORIGIN_ONLY & MASK_FOR_MIX);
+        } else if (TextUtils.isEmpty(mRenderConfig.audioPath) && mRenderConfig.originMute) {
+            mMixFlags = (mMixFlags & ~MASK_FOR_MIX);
+        } else {
+            if (!TextUtils.isEmpty(mRenderConfig.audioPath))
+                mMixFlags |= MIX_MUSIC_ONLY;
+            if (!mRenderConfig.originMute)
+                mMixFlags |= MIX_ORIGIN_ONLY;
+        }
     }
 
     @Override
@@ -172,9 +193,15 @@ public class VideoTrackTranscoderAdvance implements TrackTranscoder {
     private int drainExtractor(long timeoutUs) {
         if (mIsExtractorEOS) return DRAIN_STATE_NONE;
         int trackIndex = mExtractor.getSampleTrackIndex();
-        //用了sugar之后，trackIndex会不匹配
-        if(trackIndex >= 0 && trackIndex != mTrackIndex) {
-            return DRAIN_STATE_NONE;
+        // 用了sugar之后，trackIndex会不匹配
+        if ((mMixFlags & MASK_FOR_MIX) == MIX_MUSIC_ONLY || (mMixFlags & MASK_FOR_MIX) == MIX_NONE){
+            if (trackIndex >= 0 && trackIndex != mTrackIndex) {
+                mExtractor.selectTrack(mTrackIndex);
+            }
+        }else{
+            if(trackIndex >= 0 && trackIndex != mTrackIndex) {
+                return DRAIN_STATE_NONE;
+            }
         }
 
         int result = mDecoder.dequeueInputBuffer(timeoutUs);
@@ -184,6 +211,7 @@ public class VideoTrackTranscoderAdvance implements TrackTranscoder {
             mDecoder.queueInputBuffer(result, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
             return DRAIN_STATE_NONE;
         }
+
         int sampleSize = mExtractor.readSampleData(mDecoderInputBuffers[result], 0);
         boolean isKeyFrame = (mExtractor.getSampleFlags() & MediaExtractor.SAMPLE_FLAG_SYNC) != 0;
         mDecoder.queueInputBuffer(result, 0, sampleSize, mExtractor.getSampleTime(), isKeyFrame ? MediaCodec.BUFFER_FLAG_SYNC_FRAME : 0);

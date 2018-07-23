@@ -13,42 +13,43 @@ import com.dogcamera.transcode.compat.MediaCodecBufferCompatWrapper;
 import com.dogcamera.utils.VideoUtils;
 
 import java.io.IOException;
+
 /**
- *                             _ooOoo_
- *                            o8888888o
- *                            88" . "88
- *                            (| -_- |)
- *                            O\  =  /O
- *                         ____/`---'\____
- *                       .'  \\|     |//  `.
- *                      /  \\|||  :  |||//  \
- *                     /  _||||| -:- |||||-  \
- *                     |   | \\\  -  /// |   |
- *                     | \_|  ''\---/''  |   |
- *                     \  .-\__  `-`  ___/-. /
- *                   ___`. .'  /--.--\  `. . __
- *                ."" '<  `.___\_<|>_/___.'  >'"".
- *               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
- *               \  \ `-.   \_ __\ /__ _/   .-` /  /
- *          ======`-.____`-.___\_____/___.-`____.-'======
- *                             `=---='
- *          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- *                     佛祖保佑        永无BUG
- *            佛曰:
- *                   写字楼里写字间，写字间里程序员；
- *                   程序人员写程序，又拿程序换酒钱。
- *                   酒醒只在网上坐，酒醉还来网下眠；
- *                   酒醉酒醒日复日，网上网下年复年。
- *                   但愿老死电脑间，不愿鞠躬老板前；
- *                   奔驰宝马贵者趣，公交自行程序员。
- *                   别人笑我忒疯癫，我笑自己命太贱；
- *                   不见满街漂亮妹，哪个归得程序员？
- *
- *
+ * _ooOoo_
+ * o8888888o
+ * 88" . "88
+ * (| -_- |)
+ * O\  =  /O
+ * ____/`---'\____
+ * .'  \\|     |//  `.
+ * /  \\|||  :  |||//  \
+ * /  _||||| -:- |||||-  \
+ * |   | \\\  -  /// |   |
+ * | \_|  ''\---/''  |   |
+ * \  .-\__  `-`  ___/-. /
+ * ___`. .'  /--.--\  `. . __
+ * ."" '<  `.___\_<|>_/___.'  >'"".
+ * | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+ * \  \ `-.   \_ __\ /__ _/   .-` /  /
+ * ======`-.____`-.___\_____/___.-`____.-'======
+ * `=---='
+ * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ * 佛祖保佑        永无BUG
+ * 佛曰:
+ * 写字楼里写字间，写字间里程序员；
+ * 程序人员写程序，又拿程序换酒钱。
+ * 酒醒只在网上坐，酒醉还来网下眠；
+ * 酒醉酒醒日复日，网上网下年复年。
+ * 但愿老死电脑间，不愿鞠躬老板前；
+ * 奔驰宝马贵者趣，公交自行程序员。
+ * 别人笑我忒疯癫，我笑自己命太贱；
+ * 不见满街漂亮妹，哪个归得程序员？
+ * <p>
+ * <p>
  * 混音的类，但是这种实现方式不好，容易出bug，也比较耗内存。后期决定废弃这个类，将混音功能单独提出来。
  */
 @Deprecated
-public class AudioTrackTranscoderUgly implements TrackTranscoder {
+public class AudioTrackTranscoderUgly implements TrackTranscoder, MixConfig {
 
     private static final QueuedMuxer.SampleType SAMPLE_TYPE = QueuedMuxer.SampleType.AUDIO;
 
@@ -94,10 +95,6 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
     private long mSugarExtractLoopCount = 0;
     private long mSugarDuration = -1;
     //混音模式
-    private static final int MIX_NONE = 0;
-    private static final int MIX_ORIGIN_ONLY = 1;
-    private static final int MIX_MUSIC_ONLY = 2;
-    private static final int MASK_FOR_MIX = 3;
     private int mMixFlags = 0;
 
     public AudioTrackTranscoderUgly(MediaExtractor extractor, int trackIndex,
@@ -111,20 +108,21 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
     }
 
     /**
-     *  设置混音等等
+     * 设置混音等等
      */
-    public void setRenderConfig(RenderConfig config){
+    @Override
+    public void setRenderConfig(RenderConfig config) {
         mRenderConfig = config;
     }
 
     @Override
     public void setup() {
         mMixDuration = mRenderConfig.duration;
-        if(mMixDuration < 0){
+        if (mMixDuration < 0) {
             throw new IllegalStateException("Origin Audio Duration is less than 0.");
         }
         processMixFlags();
-        if((mMixFlags & MASK_FOR_MIX) == MIX_NONE){
+        if ((mMixFlags & MASK_FOR_MIX) == MIX_NONE) {
             return;
         }
 
@@ -155,7 +153,7 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         setupSugar();
     }
 
-    private boolean createSugarExtractor(){
+    private boolean createSugarExtractor() {
         releaseSugarExtractor();
         mSugarExtractor = new MediaExtractor();
         AssetFileDescriptor afd;
@@ -172,14 +170,14 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
 
     private void setupSugar() {
 
-        if(mRenderConfig == null){
+        if (mRenderConfig == null) {
             return;
         }
 
-        if(!TextUtils.isEmpty(mRenderConfig.audioPath)){
-            if(!createSugarExtractor()) return;
+        if (!TextUtils.isEmpty(mRenderConfig.audioPath)) {
+            if (!createSugarExtractor()) return;
             int audioTrackIndex = VideoUtils.findTrackIndex(mSugarExtractor, "audio/");
-            if(audioTrackIndex == -1){
+            if (audioTrackIndex == -1) {
                 releaseSugarExtractor();
                 return;
             }
@@ -197,25 +195,24 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
             mSugarDecoderBuffers = new MediaCodecBufferCompatWrapper(mSugarDecoder);
 
             mSugarDuration = srcMediaFormat.getLong(MediaFormat.KEY_DURATION);
-            if(mSugarDuration < 0){
+            if (mSugarDuration < 0) {
                 throw new IllegalStateException("Sugar Audio Duration is less than 0.");
             }
             mAudioChannelUgly.setSugarConfig(mSugarDecoder);
         }
 
 
-
     }
-
-    private void processMixFlags() {
-        if(mRenderConfig == null){
-            mMixFlags = (mMixFlags &~ MASK_FOR_MIX) | (MIX_ORIGIN_ONLY & MASK_FOR_MIX);
-        }else if(TextUtils.isEmpty(mRenderConfig.audioPath) && mRenderConfig.originMute){
+    @Override
+    public void processMixFlags() {
+        if (mRenderConfig == null) {
+            mMixFlags = (mMixFlags & ~MASK_FOR_MIX) | (MIX_ORIGIN_ONLY & MASK_FOR_MIX);
+        } else if (TextUtils.isEmpty(mRenderConfig.audioPath) && mRenderConfig.originMute) {
             mMixFlags = (mMixFlags & ~MASK_FOR_MIX);
-        }else{
-            if(!TextUtils.isEmpty(mRenderConfig.audioPath))
+        } else {
+            if (!TextUtils.isEmpty(mRenderConfig.audioPath))
                 mMixFlags |= MIX_MUSIC_ONLY;
-            if(!mRenderConfig.originMute)
+            if (!mRenderConfig.originMute)
                 mMixFlags |= MIX_ORIGIN_ONLY;
         }
     }
@@ -230,8 +227,8 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
     public boolean stepPipeline() {
         boolean busy = false;
         //没有任何声音
-        if((mMixFlags & MASK_FOR_MIX) == MIX_NONE){
-            if(!mIsEncoderEOS){
+        if ((mMixFlags & MASK_FOR_MIX) == MIX_NONE) {
+            if (!mIsEncoderEOS) {
                 mIsEncoderEOS = true;
                 mMuxer.setOutputFormat(SAMPLE_TYPE, null);
             }
@@ -241,30 +238,30 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         while (drainEncoder(0) != DRAIN_STATE_NONE) busy = true;
         do {
             //原声
-            if((mMixFlags & MIX_ORIGIN_ONLY) != 0)
+            if ((mMixFlags & MIX_ORIGIN_ONLY) != 0)
                 status = drainDecoder(0);
             //音乐
-            if((mMixFlags & MIX_MUSIC_ONLY) != 0)
+            if ((mMixFlags & MIX_MUSIC_ONLY) != 0)
                 status = drainSugarDecoder(0);
 
             if (status != DRAIN_STATE_NONE) busy = true;
             // NOTE: not repeating to keep from deadlock when encoder is full.
         } while (status == DRAIN_STATE_SHOULD_RETRY_IMMEDIATELY);
         //仅仅原声音
-        if((mMixFlags & MASK_FOR_MIX) == MIX_ORIGIN_ONLY)
+        if ((mMixFlags & MASK_FOR_MIX) == MIX_ORIGIN_ONLY)
             while (mAudioChannelUgly.feedEncoder(0, false)) busy = true;
         //仅仅音乐
-        if((mMixFlags & MASK_FOR_MIX) == MIX_MUSIC_ONLY)
+        if ((mMixFlags & MASK_FOR_MIX) == MIX_MUSIC_ONLY)
             while (mAudioChannelUgly.feedEncoder(0, true)) busy = true;
         //两个都有
-        if((mMixFlags & MASK_FOR_MIX) == MIX_MUSIC_ONLY + MIX_ORIGIN_ONLY)
+        if ((mMixFlags & MASK_FOR_MIX) == MIX_MUSIC_ONLY + MIX_ORIGIN_ONLY)
             while (mAudioChannelUgly.feedEncoderWithSuagr(0)) busy = true;
 
         //原声
-        if((mMixFlags & MIX_ORIGIN_ONLY) != 0)
+        if ((mMixFlags & MIX_ORIGIN_ONLY) != 0)
             while (drainExtractor(0) != DRAIN_STATE_NONE) busy = true;
         //音乐
-        if((mMixFlags & MIX_MUSIC_ONLY) != 0)
+        if ((mMixFlags & MIX_MUSIC_ONLY) != 0)
             while (drainSugarExtractor(0) != DRAIN_STATE_NONE) busy = true;
 
         return busy;
@@ -275,8 +272,14 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         int trackIndex = mExtractor.getSampleTrackIndex();
 
         //用了sugar之后，trackIndex会不匹配
-        if(trackIndex >= 0 && trackIndex != mTrackIndex) {
-            return DRAIN_STATE_NONE;
+        if ((mMixFlags & MASK_FOR_MIX) == MIX_MUSIC_ONLY || (mMixFlags & MASK_FOR_MIX) == MIX_NONE){
+            if (trackIndex >= 0 && trackIndex != mTrackIndex) {
+                mExtractor.selectTrack(mTrackIndex);
+            }
+        }else{
+            if(trackIndex >= 0 && trackIndex != mTrackIndex) {
+                return DRAIN_STATE_NONE;
+            }
         }
 
         final int result = mDecoder.dequeueInputBuffer(timeoutUs);
@@ -295,16 +298,16 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         return DRAIN_STATE_CONSUMED;
     }
 
-    private int drainSugarExtractor(long timeoutUs){
-        if(mIsSurgarExtractorEOS) return DRAIN_STATE_NONE;
+    private int drainSugarExtractor(long timeoutUs) {
+        if (mIsSurgarExtractorEOS) return DRAIN_STATE_NONE;
         int trackIndex = mSugarExtractor.getSampleTrackIndex();
-        //用了sugar之后，trackIndex会不匹配
+        /* sugar只有音频，所以不存在trackIndex不匹配
         if(trackIndex >= 0 && trackIndex != mSurgarTrackIndex) {
             return DRAIN_STATE_NONE;
         }
-
+        */
         final int result = mSugarDecoder.dequeueInputBuffer(timeoutUs);
-        if(result < 0) return DRAIN_STATE_NONE;
+        if (result < 0) return DRAIN_STATE_NONE;
 
         //如果解析长度超过了视频总时长，就不再读取
         long processPTS = mSugarDuration * mSugarExtractLoopCount + mSugarExtractor.getSampleTime();
@@ -315,7 +318,7 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
             return DRAIN_STATE_NONE;
         }
         /** 读取完毕后，重新从头读取 */
-        if(trackIndex < 0){
+        if (trackIndex < 0) {
             //one time sugar EOS
             mSugarExtractLoopCount += 1;
             //读取完毕后，重新从头读取
@@ -325,9 +328,11 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
 
         final int sampleSize = mSugarExtractor.readSampleData(mSugarDecoderBuffers.getInputBuffer(result), 0);
         final boolean isKeyFrame = (mSugarExtractor.getSampleFlags() & MediaExtractor.SAMPLE_FLAG_SYNC) != 0;
-        mSugarDecoder.queueInputBuffer(result,  0, sampleSize, mSugarExtractor.getSampleTime(), isKeyFrame ? MediaCodec.BUFFER_FLAG_SYNC_FRAME : 0);
+        mSugarDecoder.queueInputBuffer(result, 0, sampleSize, mSugarExtractor.getSampleTime(), isKeyFrame ? MediaCodec.BUFFER_FLAG_SYNC_FRAME : 0);
         mSugarExtractor.advance();
+        /** 一次只读取一帧数据, 怕读多了buffer过大 */
         return DRAIN_STATE_NONE;
+//        return DRAIN_STATE_CONSUMED;
     }
 
     private int drainDecoder(long timeoutUs) {
@@ -354,8 +359,8 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         return DRAIN_STATE_CONSUMED;
     }
 
-    private int drainSugarDecoder(long timeoutUs){
-        if(mIsSurgarDecoderEOS) return DRAIN_STATE_NONE;
+    private int drainSugarDecoder(long timeoutUs) {
+        if (mIsSurgarDecoderEOS) return DRAIN_STATE_NONE;
 
         int result = mSugarDecoder.dequeueOutputBuffer(mSugarBufferInfo, timeoutUs);
         switch (result) {
@@ -444,7 +449,7 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         releaseSuagrDecoder();
     }
 
-    private void releaseSuagrDecoder(){
+    private void releaseSuagrDecoder() {
         if (mSugarDecoder != null) {
             if (mSugarDecoderStarted) mSugarDecoder.stop();
             mSugarDecoder.release();
@@ -452,8 +457,8 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder {
         }
     }
 
-    private void releaseSugarExtractor(){
-        if(mSugarExtractor != null){
+    private void releaseSugarExtractor() {
+        if (mSugarExtractor != null) {
             mSugarExtractor.release();
             mSugarExtractor = null;
         }
