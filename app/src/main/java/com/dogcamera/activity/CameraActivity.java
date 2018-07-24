@@ -36,6 +36,7 @@ import com.dogcamera.base.BaseActivity;
 import com.dogcamera.filter.GPUImageFilter;
 import com.dogcamera.filter.GPUImageSildeFilterGroup;
 import com.dogcamera.utils.CameraUtils;
+import com.dogcamera.utils.FileUtils;
 import com.dogcamera.utils.FilterProvider;
 import com.dogcamera.utils.SystemUIUtils;
 import com.dogcamera.utils.VideoUtils;
@@ -111,6 +112,10 @@ public class CameraActivity extends BaseActivity {
     private FilterProvider mFilterProvider;
 
     private List<String> mRecordPathList = new ArrayList<>();
+    //临时保存所有录制视频片段，合成结束或者退出时候要删除
+    private List<String> mTmpRecordPathList = new ArrayList<>();
+    //保存所有录制片段的progress
+    private List<Integer> mRecordProgressList = new ArrayList<>();
 
     ProgressDialog mProgressDialog;
 
@@ -373,6 +378,8 @@ public class CameraActivity extends BaseActivity {
                 .setItems(new String[]{"Yes", "No"}, ((dialogInterface, i) -> {
                     if (i == 0) {
                         mRecordView.stopRecord();
+                        //删除临时录制视频片段文件
+                        FileUtils.deleteFiles(mTmpRecordPathList);
                         finish();
                     }
                 }))
@@ -463,6 +470,8 @@ public class CameraActivity extends BaseActivity {
             mRecordProgressView.setClickable(false);
             Toast.makeText(this, "拍摄完成", Toast.LENGTH_LONG).show();
         }
+        //保存上一次录制progress
+        mRecordProgressList.add(mProgressTimeMs);
         mProgressTimeMs = 0;
         //停止录制
         doStopRecord();
@@ -488,6 +497,7 @@ public class CameraActivity extends BaseActivity {
         mRecordView.startRecord();
         //记录录制视频路径
         mRecordPathList.add(recordPath);
+        mTmpRecordPathList.add(recordPath);
     }
 
     private void doStopRecord() {
@@ -506,7 +516,19 @@ public class CameraActivity extends BaseActivity {
 
     @OnClick(R.id.record_button_delete)
     void deleteSegVideo() {
+        if(mRecordPathList.size() > 0){
+            if(mRecordPathList.size() == 1){
+                mRecordDeleteImg.setVisibility(View.GONE);
+                mRecordTv.setText("点击拍摄");
+            }
+            //移除上一段录制视频在list中的记录
+            mRecordPathList.remove(mRecordPathList.size() - 1);
+            //更新进度UI
+            mSegLineProgressView.removeViews(mSegLineProgressView.getChildCount() - 2, 2);
+            //剩余录制进度要加上删除的
+            mRemainRecordTimeMs += mRecordProgressList.remove(mRecordProgressList.size() - 1);
 
+        }
     }
 
     @OnClick(R.id.record_button_next)
@@ -532,7 +554,6 @@ public class CameraActivity extends BaseActivity {
                 }
                 //FIXME 相同编码参数视频拼接，会有一些Bug，建议使用开源库mp4parser
                 boolean isSuccess = VideoUtils.joinVideoForSameCodec(mRecordPathList, tempFile.getAbsolutePath());
-
                 File finalTempFile = tempFile;
                 runOnUiThread(() -> {
                     Toast.makeText(CameraActivity.this, isSuccess ? "视频拼接成功" : "视频拼接失败", Toast.LENGTH_SHORT).show();
