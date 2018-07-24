@@ -41,6 +41,7 @@ import java.util.Queue;
  *          .............................................
  *           佛曰：bug泛滥，我已瘫痪！
  */
+@Deprecated
 class AudioChannelUgly {
 
     private static class AudioBuffer {
