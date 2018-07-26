@@ -149,8 +149,8 @@ public class CameraUtils {
             i++;
         }
         if (i == sizeList.size()) {
-            //如果没找到，就选用最大的size
-            i -= 1;
+            //如果没找到，就选用最小的size
+            i = 0;
         }
         return sizeList.get(i);
     }

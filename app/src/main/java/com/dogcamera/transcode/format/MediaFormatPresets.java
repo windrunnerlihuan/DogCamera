@@ -149,20 +149,4 @@ public class MediaFormatPresets {
         return format;
     }
 
-    public static MediaFormat getExportPresetXxY(int originalWidth, int originalHeight){
-        MediaFormat format = MediaFormat.createVideoFormat("video/avc", originalWidth, originalHeight);
-        format.setInteger(MediaFormat.KEY_BIT_RATE, VIDEO_BIRATE);
-        format.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
-        format.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
-        format.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 30);
-        return format;
-    }
-
-    public static MediaFormat getExportPresetCustomAudio(){
-        final MediaFormat format = MediaFormat.createAudioFormat(MediaFormatExtraConstants.MIMETYPE_AUDIO_AAC,
-                44100, 1);
-        format.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
-        format.setInteger(MediaFormat.KEY_BIT_RATE, 128000);
-        return format;
-    }
 }

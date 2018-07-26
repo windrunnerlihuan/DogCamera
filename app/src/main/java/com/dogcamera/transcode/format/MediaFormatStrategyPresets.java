@@ -76,12 +76,12 @@ public class MediaFormatStrategyPresets {
         return new ExportPreset1280x720Strategy();
     }
 
-    public static MediaFormatStrategy createExportPresetXxYStategy(int width, int height) {
-        return new ExportPresetXxYStrategy(width, height);
-    }
-
     public static MediaFormatStrategy createExportPresetCustomStategy(){
         return new ExportPresetCustomStrategy();
+    }
+
+    public static MediaFormatStrategy createExportPresetCompatStategy(){
+        return new ExportPresetCompatStrategy();
     }
 
     private MediaFormatStrategyPresets() {

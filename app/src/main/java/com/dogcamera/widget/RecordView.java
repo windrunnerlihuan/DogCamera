@@ -125,7 +125,7 @@ public class RecordView extends BaseGLSurfaceView {
                 params.setFocusMode(Camera.Parameters.FLASH_MODE_AUTO);
             }
             mCamera.setParameters(params);
-
+            //录制时候getEncoderImageDimen()方法已经转换过ImageWidth和ImageHeight了，这里不用转换了
 //            if(degress == 90 || degress == 270){
 //                mImageWidth = previewHeight;
 //                mImageHeight = previewWidth;
@@ -155,13 +155,6 @@ public class RecordView extends BaseGLSurfaceView {
 //            mCamera.setDisplayOrientation(degress);
             mCamera.setPreviewTexture(mSurfaceTexture);
 
-//            if (mCallbackBuffer == null) {
-//                int preWidth = mCamera.getParameters().getPreviewSize().width;
-//                int preHeight = mCamera.getParameters().getPreviewSize().height;
-//                mCallbackBuffer = new byte[preWidth * preHeight * 3 / 2];
-//            }
-//            mCamera.addCallbackBuffer(mCallbackBuffer);
-//            mCamera.setPreviewCallbackWithBuffer(this);
             mCamera.startPreview();
             return true;
         } catch (Exception e) {

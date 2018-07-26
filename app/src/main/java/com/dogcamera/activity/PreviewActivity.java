@@ -226,8 +226,6 @@ public class PreviewActivity extends BaseActivity {
                 VideoUtils.transcodeAddFilter(mPlayUri, outpath,
                         new RenderConfig.Builder()
                                 .setFilterId(mFilterId)
-                                .setOutputWidth(mVideoView.getImageWidth())
-                                .setOutputHeight(mVideoView.getImageHeight())
                                 .setAudioPath((String) retPropSet.get(DogConstants.PREVIEW_KEY_MUSIC))
                                 .setOriginMute(
                                         retPropSet.get(DogConstants.PREVIEW_KEY_ORIGIN_MUTE) != null ?

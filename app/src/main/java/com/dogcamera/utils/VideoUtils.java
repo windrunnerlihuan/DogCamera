@@ -8,12 +8,14 @@ import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.Log;
 
 import com.dogcamera.transcode.MediaTranscoder;
 import com.dogcamera.transcode.engine.RenderConfig;
 import com.dogcamera.transcode.format.MediaFormatStrategy;
 import com.dogcamera.transcode.format.MediaFormatStrategyPresets;
+import com.dogcamera.transcode.utils.VideoDimensionCompat;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -187,12 +189,35 @@ public class VideoUtils {
     public static void transcodeAddFilter(String srcPath, String dstPath, RenderConfig config, MediaTranscoder.Listener listener){
         //FIXME 一些机型需要适配
         //TODO
-        MediaFormatStrategy strategy = MediaFormatStrategyPresets.createExportPresetCustomStategy();
+        MediaFormatStrategy strategy = getAdaptableStrategy();
         try {
              MediaTranscoder.getInstance().transcodeVideoSync(srcPath, dstPath, strategy, config, listener);
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static MediaFormatStrategy getAdaptableStrategy(){
+        MediaFormatStrategy mediaFormatStrategy = null;
+        if(isGreenScreenPhone()){
+            mediaFormatStrategy = MediaFormatStrategyPresets.createExportPresetCompatStategy();
+        }
+        if(mediaFormatStrategy == null){
+            mediaFormatStrategy = MediaFormatStrategyPresets.createExportPresetCustomStategy();
+        }
+        return mediaFormatStrategy;
+    }
+
+    public static boolean isGreenScreenPhone(){
+        String bm = Build.MODEL;
+        if(TextUtils.isEmpty(bm))
+            return false;
+        for(String gsp : VideoDimensionCompat.HUAWEI_GREENSCREEN_PHONE){
+            if(gsp.contains(bm)){
+                return true;
+            }
+        }
+        return false;
     }
 
 }

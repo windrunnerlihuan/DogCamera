@@ -3,19 +3,19 @@ package com.dogcamera.transcode.format;
 import android.media.MediaFormat;
 import android.util.Log;
 
-public class ExportPresetCustomStrategy implements MediaFormatStrategy {
+public class ExportPresetCompatStrategy implements MediaFormatStrategy {
 
     private static final String TAG = "ExportPresetXxYStrategy";
 
-    public ExportPresetCustomStrategy() {
+    public ExportPresetCompatStrategy() {
 
     }
-
+    
     @Override
     public MediaFormat createVideoOutputFormat(MediaFormat inputFormat) {
         int width = inputFormat.getInteger("width");
         int height = inputFormat.getInteger("height");
-        MediaFormat outputFormat = MediaFormatPresets.getExportPreset960x540(width, height);
+        MediaFormat outputFormat = MediaFormatPresets.getExportPreset640x360(width, height);
         int outWidth = outputFormat.getInteger("width");
         int outHeight = outputFormat.getInteger("height");
         Log.d(TAG, String.format("input: %dx%d => output: %dx%d", width, height, outWidth, outHeight));
