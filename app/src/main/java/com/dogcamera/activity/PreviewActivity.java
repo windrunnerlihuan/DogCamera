@@ -38,6 +38,8 @@ public class PreviewActivity extends BaseActivity {
     private String[] SYMBOLS = new String[]{"NONE", "MUSIC", "CHART", "EFFECT"};
 
     private static final int MSG_PROGRESS_UPDATE = 1;
+    private static final int MSG_PROGRESS_FINISH = 2;
+    private static final int MSG_PROGRESS_FAILED = 3;
 
     @BindView(R.id.preview_videoview)
     PlayView mVideoView;
@@ -60,8 +62,6 @@ public class PreviewActivity extends BaseActivity {
 
     private ProgressHandler mHandler;
 
-    public float testprogress = 0;
-
     private List<PreviewRestartParams.PreviewRestartListener> mRestartListener;
 
     private class ProgressHandler extends Handler {
@@ -79,21 +79,14 @@ public class PreviewActivity extends BaseActivity {
             PreviewActivity activity = mContextRef.get();
             switch (msg.what) {
                 case MSG_PROGRESS_UPDATE:
-
-
-                    if (testprogress >= 1) {
-                        activity.updateProgressUI(1f, new RectProgressView.OnProgressEndListener() {
-                            @Override
-                            public void onProgressEnd() {
-                                Toast.makeText(PreviewActivity.this, "合成完成", Toast.LENGTH_LONG).show();
-                            }
-                        });
-                        break;
-                    }
-                    activity.updateProgressUI(testprogress, null);
-                    testprogress += 0.1;
-                    sendEmptyMessageDelayed(MSG_PROGRESS_UPDATE, 500);
-
+                    float progress = (float) msg.obj;
+                    activity.updateProgressUI(progress, null);
+                    break;
+                case MSG_PROGRESS_FINISH:
+                    activity.updateProgressUI(1f, () -> Toast.makeText(PreviewActivity.this, "合成完成", Toast.LENGTH_LONG).show());
+                    break;
+                case MSG_PROGRESS_FAILED:
+                    Toast.makeText(PreviewActivity.this, "合成失败", Toast.LENGTH_LONG).show();
                     break;
             }
 
@@ -210,6 +203,7 @@ public class PreviewActivity extends BaseActivity {
     }
 
     private void finishPreview(){
+        mRectProgressView.setVisibility(View.VISIBLE);
         mVideoView.stopPlay();
         SimpleArrayMap<Integer, Object> retPropSet = new SimpleArrayMap<>();
         for (PreviewRestartParams.PreviewRestartListener l : mRestartListener) {
@@ -236,12 +230,14 @@ public class PreviewActivity extends BaseActivity {
                         new MediaTranscoder.Listener() {
                     @Override
                     public void onTranscodeProgress(double progress) {
-
+                        Log.e(TAG, "合成进度： " + (float)progress);
+                        mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_UPDATE, (float)progress));
                     }
 
                     @Override
                     public void onTranscodeCompleted() {
                         Log.e(TAG, "onTranscodeCompleted");
+                        mHandler.sendEmptyMessage(MSG_PROGRESS_FINISH);
                     }
 
                     @Override
@@ -251,7 +247,8 @@ public class PreviewActivity extends BaseActivity {
 
                     @Override
                     public void onTranscodeFailed(Exception exception) {
-                        Log.e(TAG, "onTranscodeCompleted");
+                        Log.e(TAG, "onTranscodeFailed");
+                        mHandler.sendEmptyMessage(MSG_PROGRESS_FAILED);
                     }
                 });
             }
@@ -287,7 +284,7 @@ public class PreviewActivity extends BaseActivity {
 
     @OnClick(R.id.preview_back)
     void onBackClick() {
-
+        onBackPressed();
     }
 
 }

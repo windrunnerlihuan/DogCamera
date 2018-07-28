@@ -56,9 +56,9 @@ public class RecordView extends BaseGLSurfaceView {
     public RecordView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mVideoEncoder = new TextureMovieEncoder();
-        mVideoEncoder.setOnErrorListener((errorType) -> {
+        mVideoEncoder.setOnErrorListener((errorType, errorMsg) -> {
             if (mOnRecordingErrorListener != null) {
-                mOnRecordingErrorListener.onError(errorType);
+                mOnRecordingErrorListener.onError(errorType, errorMsg);
             }
         });
     }
@@ -278,6 +278,6 @@ public class RecordView extends BaseGLSurfaceView {
     }
 
     public interface OnRecordingErrorListener {
-        void onError(int errorType);
+        void onError(int errorType, String errorMsg);
     }
 }

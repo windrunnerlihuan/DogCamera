@@ -27,6 +27,7 @@ import com.dogcamera.filter.GPUImageExtTexFilter;
 import com.dogcamera.filter.GPUImageFilter;
 import com.dogcamera.filter.GPUImageFilterGroup;
 import com.dogcamera.utils.FilterUtils;
+import com.dogcamera.utils.StringUtils;
 
 import java.io.File;
 import java.lang.ref.WeakReference;
@@ -336,7 +337,7 @@ public class TextureMovieEncoder implements Runnable {
             mVideoEncoder.start();
         } catch (Exception e) {
             if (mOnErrorListener != null) {
-                mOnErrorListener.onError(ERROR_ENCODE);
+                mOnErrorListener.onError(ERROR_ENCODE, StringUtils.exception2String(e));
             }
             mOccurError = true;
             return;
@@ -363,7 +364,7 @@ public class TextureMovieEncoder implements Runnable {
                 mVideoEncoder.stop();
             } catch (Exception e) {
                 if (mOnErrorListener != null) {
-                    mOnErrorListener.onError(ERROR_RELEASE);
+                    mOnErrorListener.onError(ERROR_RELEASE, StringUtils.exception2String(e));
                 }
                 mOccurError = true;
             }
@@ -416,6 +417,7 @@ public class TextureMovieEncoder implements Runnable {
     private void prepareEncoder(EncoderConfig config) {
         AndroidMuxer muxer = new AndroidMuxer(config.mOutputFile.getPath());
 
+        String errorMsg = "";
         try {
             mVideoEncoder = new VideoEncoderCore(muxer, config.mWidth, config.mHeight);
             if (mRecordSpeed == 1 && mRecordAudio) {
@@ -424,11 +426,12 @@ public class TextureMovieEncoder implements Runnable {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            errorMsg = StringUtils.exception2String(e);
         }
 
         if (mVideoEncoder == null) { //init error
             if (mOnErrorListener != null) {
-                mOnErrorListener.onError(ERROR_INIT);
+                mOnErrorListener.onError(ERROR_INIT, errorMsg);
             }
             mOccurError = true;
             return;
@@ -441,7 +444,7 @@ public class TextureMovieEncoder implements Runnable {
             mInputWindowSurface.makeCurrent();
         } catch (Exception e) {
             if (mOnErrorListener != null) {
-                mOnErrorListener.onError(ERROR_INIT);
+                mOnErrorListener.onError(ERROR_INIT, StringUtils.exception2String(e));
             }
             mOccurError = true;
             return;
@@ -475,7 +478,7 @@ public class TextureMovieEncoder implements Runnable {
                 mVideoEncoder.release();
             } catch (Exception e) {
                 if (mOnErrorListener != null) {
-                    mOnErrorListener.onError(ERROR_RELEASE);
+                    mOnErrorListener.onError(ERROR_RELEASE, StringUtils.exception2String(e));
                 }
                 mOccurError = true;
             }
@@ -502,7 +505,7 @@ public class TextureMovieEncoder implements Runnable {
     }
 
     public interface OnErrorListener {
-        void onError(int errorType);
+        void onError(int errorType, String errorMsg);
     }
 
 }

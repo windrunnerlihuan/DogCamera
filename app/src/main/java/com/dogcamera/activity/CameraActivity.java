@@ -154,14 +154,16 @@ public class CameraActivity extends BaseActivity {
         initUiVisibility();
         test();
         initValues();
-        // 计时器
-
         // 录制按钮
         RecordGestureListener gestureListener = new RecordGestureListener();
         RecordGestureDetector gestureDetector = new RecordGestureDetector(this, gestureListener);
         mRecordView.setOnTouchListener((view, motionEvent) -> {
             gestureDetector.onTouchEvent(motionEvent);
             return true;
+        });
+        mRecordView.setOnRecordingErrorListener((errorType, errorMsg) -> {
+            // TODO 录制失败
+
         });
         // 滤镜选择器
         initFilterSwitcher();
