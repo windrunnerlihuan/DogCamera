@@ -552,8 +552,8 @@ public class CameraActivity extends BaseActivity {
                     return;
 
                 }
-                //FIXME 相同编码参数视频拼接，会有一些Bug，建议使用开源库mp4parser
-                boolean isSuccess = VideoUtils.joinVideoForSameCodec(mRecordPathList, tempFile.getAbsolutePath());
+                //拼接视频
+                boolean isSuccess = VideoUtils.joinVideoWithMp4parser(mRecordPathList, tempFile.getAbsolutePath());
                 File finalTempFile = tempFile;
                 runOnUiThread(() -> {
                     Toast.makeText(CameraActivity.this, isSuccess ? "视频拼接成功" : "视频拼接失败", Toast.LENGTH_SHORT).show();
