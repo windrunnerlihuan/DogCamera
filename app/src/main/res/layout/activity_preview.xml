@@ -92,5 +92,19 @@
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         />
+    <TextView
+        android:id="@+id/preview_no_exiting"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:textColor="@color/light_gray"
+        android:textSize="15sp"
+        android:text="正在合成，请勿退出~( ゜▽゜)つロ 乾杯~"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/preview_videoview"
+        />
 
 </android.support.constraint.ConstraintLayout>

@@ -76,7 +76,7 @@ public class MusicFragment extends BaseFragment implements PreviewRestartParams.
         //setData
         MusicListAdapter adapter = new MusicListAdapter(mAudioItems);
         adapter.setOnItemClickListener((parent, view, position, id) -> {
-            //TODO onItemClick
+            //onItemClick
             String path = mAudioItems.get(position).path;
             if ("XXX".equalsIgnoreCase(path)) {
                 Toast.makeText(getContext(), "主人很懒，暂时不想开发新功能～。～", Toast.LENGTH_SHORT).show();

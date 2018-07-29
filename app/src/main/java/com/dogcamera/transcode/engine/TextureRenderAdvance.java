@@ -99,7 +99,7 @@ public class TextureRenderAdvance extends AbsTextureRender{
     private void initFilters(){
         mFilterGroup = new GPUImageFilterGroup();
         mFilterGroup.addFilter(new GPUImageExtTexFilter());
-        //TODO add yourself filter
+        //add yourself filter
         mFilterGroup.addFilter(FilterUtils.createFilter(mRenderConfig.filterId));
 
         mFilterGroup.init();

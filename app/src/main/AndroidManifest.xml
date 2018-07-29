@@ -52,6 +52,19 @@
                     android:scheme="dog" />
             </intent-filter>
         </activity>
+        <!--发布页-->
+        <activity android:name=".activity.PublishActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.Fullscreen">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data
+                    android:host="publish"
+                    android:scheme="dog" />
+            </intent-filter>
+        </activity>
 
     </application>
 

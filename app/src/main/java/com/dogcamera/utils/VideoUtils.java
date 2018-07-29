@@ -12,7 +12,6 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.coremedia.iso.boxes.Container;
-import com.dogcamera.DogApplication;
 import com.dogcamera.transcode.MediaTranscoder;
 import com.dogcamera.transcode.engine.RenderConfig;
 import com.dogcamera.transcode.format.MediaFormatStrategy;
@@ -197,7 +196,7 @@ public class VideoUtils {
      * 转码并添加滤镜，一些机型转换成1280x720的视频可能会有花屏、绿屏，需要做适配
      */
     @SuppressLint("NewApi")
-    public static void transcodeAddFilter(String srcPath, String dstPath, RenderConfig config, MediaTranscoder.Listener listener) {
+    public static void transcodeVideo(String srcPath, String dstPath, RenderConfig config, MediaTranscoder.Listener listener) {
         //FIXME 一些机型需要适配
         //TODO
         MediaFormatStrategy strategy = getAdaptableStrategy();

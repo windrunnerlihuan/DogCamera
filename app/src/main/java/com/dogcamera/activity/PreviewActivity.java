@@ -3,6 +3,7 @@ package com.dogcamera.activity;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
@@ -11,6 +12,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.dogcamera.R;
@@ -41,6 +43,9 @@ public class PreviewActivity extends BaseActivity {
     private static final int MSG_PROGRESS_FINISH = 2;
     private static final int MSG_PROGRESS_FAILED = 3;
 
+    @BindView(R.id.preview_root_layout)
+    ConstraintLayout mRootLayout;
+
     @BindView(R.id.preview_videoview)
     PlayView mVideoView;
 
@@ -57,12 +62,21 @@ public class PreviewActivity extends BaseActivity {
     @BindView(R.id.preview_bottom_container)
     FrameLayout mBottomContainer;
 
+    @BindView(R.id.preview_finish)
+    ImageView mFinishImg;
+    @BindView(R.id.preview_back)
+    ImageView mBackImg;
+    @BindView(R.id.preview_no_exiting)
+    TextView mNoExitingTv;
+
     private String mPlayUri;
     private String mFilterId;
 
     private ProgressHandler mHandler;
 
     private List<PreviewRestartParams.PreviewRestartListener> mRestartListener;
+
+    private boolean mIsComposing = false;
 
     private class ProgressHandler extends Handler {
 
@@ -84,9 +98,13 @@ public class PreviewActivity extends BaseActivity {
                     break;
                 case MSG_PROGRESS_FINISH:
                     activity.updateProgressUI(1f, () -> Toast.makeText(PreviewActivity.this, "合成完成", Toast.LENGTH_LONG).show());
+                    //TODO compose succeed
+                    String outPath = (String) msg.obj;
+
                     break;
                 case MSG_PROGRESS_FAILED:
                     Toast.makeText(PreviewActivity.this, "合成失败", Toast.LENGTH_LONG).show();
+                    //TODO comose failed
                     break;
             }
 
@@ -203,7 +221,8 @@ public class PreviewActivity extends BaseActivity {
     }
 
     private void finishPreview(){
-        mRectProgressView.setVisibility(View.VISIBLE);
+        mIsComposing = true;
+        //function
         mVideoView.stopPlay();
         SimpleArrayMap<Integer, Object> retPropSet = new SimpleArrayMap<>();
         for (PreviewRestartParams.PreviewRestartListener l : mRestartListener) {
@@ -212,12 +231,28 @@ public class PreviewActivity extends BaseActivity {
                 retPropSet.putAll(l.onPreviewGetPropSet());
             }
         }
+        //UI
+        mRootLayout.setClickable(false);
+        mMusicIcon.setVisibility(View.INVISIBLE);
+        mChartIcon.setVisibility(View.INVISIBLE);
+        mEffectIcon.setVisibility(View.INVISIBLE);
+        mFinishImg.setVisibility(View.INVISIBLE);
+        mBackImg.setVisibility(View.INVISIBLE);
+        mRectProgressView.setVisibility(View.VISIBLE);
+        mNoExitingTv.setVisibility(View.VISIBLE);
+
+        doCompose(retPropSet);
+
+    }
+
+    private void doCompose(SimpleArrayMap<Integer, Object> retPropSet){
+
         new Thread(){
             @Override
             public void run() {
                 String outpath = RecordConstant.RECORD_DIR + File.separator + "transcode" + System.currentTimeMillis() + ".mp4";
 
-                VideoUtils.transcodeAddFilter(mPlayUri, outpath,
+                VideoUtils.transcodeVideo(mPlayUri, outpath,
                         new RenderConfig.Builder()
                                 .setFilterId(mFilterId)
                                 .setAudioPath((String) retPropSet.get(DogConstants.PREVIEW_KEY_MUSIC))
@@ -228,31 +263,46 @@ public class PreviewActivity extends BaseActivity {
                                 )
                                 .build(),
                         new MediaTranscoder.Listener() {
-                    @Override
-                    public void onTranscodeProgress(double progress) {
-                        Log.e(TAG, "合成进度： " + (float)progress);
-                        mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_UPDATE, (float)progress));
-                    }
+                            @Override
+                            public void onTranscodeProgress(double progress) {
+                                Log.e(TAG, "合成进度： " + (float)progress);
+                                mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_UPDATE, (float)progress));
+                            }
 
-                    @Override
-                    public void onTranscodeCompleted() {
-                        Log.e(TAG, "onTranscodeCompleted");
-                        mHandler.sendEmptyMessage(MSG_PROGRESS_FINISH);
-                    }
+                            @Override
+                            public void onTranscodeCompleted() {
+                                Log.e(TAG, "onTranscodeCompleted");
+                                mHandler.sendEmptyMessage(MSG_PROGRESS_FINISH);
+                                mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_FINISH, outpath));
+                            }
 
-                    @Override
-                    public void onTranscodeCanceled() {
+                            @Override
+                            public void onTranscodeCanceled() {
+                                // no exiting currently
+                                //TODO cancel compose
+                            }
 
-                    }
-
-                    @Override
-                    public void onTranscodeFailed(Exception exception) {
-                        Log.e(TAG, "onTranscodeFailed");
-                        mHandler.sendEmptyMessage(MSG_PROGRESS_FAILED);
-                    }
-                });
+                            @Override
+                            public void onTranscodeFailed(Exception exception) {
+                                Log.e(TAG, "onTranscodeFailed");
+                                mHandler.sendEmptyMessage(MSG_PROGRESS_FAILED);
+                            }
+                        });
             }
         }.start();
+    }
+
+    private void goToPublishPage(String outPath){
+
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(mIsComposing){
+            Toast.makeText(this, "正在合成，请勿退出(ノ=Д=)ノ┻━┻", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        super.onBackPressed();
     }
 
     @OnClick(R.id.preview_root_layout)

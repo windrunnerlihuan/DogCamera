@@ -110,7 +110,7 @@ public class GPUImageSildeFilterGroup extends GPUImageFilter {
 //        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0,
 //                GLES20.GL_TEXTURE_2D, mFrameBufferTextures[0], 0);
 //        GLES20.glClearColor(0, 0, 0, 0);
-        //TODO draw
+        //draw
         drawFilter(textureId, cubeBuffer, textureBuffer);
 //        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
     }

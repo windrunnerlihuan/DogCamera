@@ -90,7 +90,6 @@ public class AudioItemView extends LinearLayout implements View.OnClickListener{
     @Override
     public void onClick(View v) {
         setSelected(!mSelected);
-        //TODO
         if(mListener != null){
             mListener.onItemClick(mSelected);
         }

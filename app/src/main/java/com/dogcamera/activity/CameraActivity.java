@@ -416,6 +416,7 @@ public class CameraActivity extends BaseActivity {
         mHandler.sendEmptyMessageDelayed(MSG_PROGRESS_UPDATE, UPDATE_PROGRESS_INTERVAL);
         //没有剩余时间了，完成录制
         if (mProgressTimeMs >= mRemainRecordTimeMs) {
+            mHandler.removeCallbacksAndMessages(null);
             stopRecord(true);
         }
 
@@ -536,6 +537,11 @@ public class CameraActivity extends BaseActivity {
     @OnClick(R.id.record_button_next)
     void gotoEditPage() {
         showProgressDialog(true);
+        // 延时500ms,规避子线程立刻合成失败问题
+        mHandler.postDelayed(() -> doJoinVideoAndJumpToEditPage(), 500);
+    }
+
+    private void doJoinVideoAndJumpToEditPage(){
         new Thread(){
             @Override
             public void run() {

@@ -9,7 +9,8 @@ def butterKnifeVersion = "8.5.1"
 //def ormLiteVersion = "4.48"
 //def fastJsonVersion = "1.1.60.android"
 def leakcanaryVersion = "1.3.1"
-def mp4parserVersion = "1.1.22"
+def mp4parserVersion = "1.1.21"
+def mp4parser2Version = "1.9.34"
 
 project.ext {
     android = [
@@ -70,6 +71,9 @@ project.ext {
             "leakcanary-android-no-op"    : "com.squareup.leakcanary:leakcanary-android-no-op:${leakcanaryVersion}",
 
             //mp4parser
-            "mp4parser"                   : "com.googlecode.mp4parser:isoparser:${mp4parserVersion}"
+            mp4parser                     : "com.googlecode.mp4parser:isoparser:${mp4parserVersion}",
+//            "mp4parser-isoparser"                   : "org.mp4parser:isoparser:${mp4parser2Version}",
+//            "mp4parser-muxer"                   : "org.mp4parser:muxer:${mp4parser2Version}",
+//            "mp4parser-streaming"                   : "org.mp4parser:streaming:${mp4parser2Version}",
     ]
 }
