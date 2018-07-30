@@ -39,8 +39,10 @@ public class AndroidMuxer {
         }
     }
 
-    /**生成视频的角度*/
-    public void setOrientation(int orientation){
+    /**
+     * 生成视频的角度
+     */
+    public void setOrientation(int orientation) {
         mMuxer.setOrientationHint(orientation);
     }
 
@@ -72,11 +74,7 @@ public class AndroidMuxer {
     @TargetApi(18)
     public void writeSampleData(int trackIndex, ByteBuffer encodedData, MediaCodec.BufferInfo bufferInfo) {
         synchronized (mMuxer) {
-            try {
-                mMuxer.writeSampleData(trackIndex, encodedData, bufferInfo);
-            }catch (Exception e){
-                e.printStackTrace();
-            }
+            mMuxer.writeSampleData(trackIndex, encodedData, bufferInfo);
         }
     }
 
@@ -84,13 +82,9 @@ public class AndroidMuxer {
     public boolean release() {
         synchronized (mMuxer) {
             if (++mNumReleases == mNumTracks) {
-                try {
-                    mMuxer.stop();
-                    mMuxer.release();
-                    return true;
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
+                mMuxer.stop();
+                mMuxer.release();
+                return true;
             }
         }
         return false;

@@ -24,6 +24,7 @@ import com.dogcamera.transcode.MediaTranscoder;
 import com.dogcamera.transcode.engine.RenderConfig;
 import com.dogcamera.utils.DogConstants;
 import com.dogcamera.utils.VideoUtils;
+import com.dogcamera.widget.LoadingView;
 import com.dogcamera.widget.PlayView;
 import com.dogcamera.widget.RectProgressView;
 
@@ -66,8 +67,8 @@ public class PreviewActivity extends BaseActivity {
     ImageView mFinishImg;
     @BindView(R.id.preview_back)
     ImageView mBackImg;
-    @BindView(R.id.preview_no_exiting)
-    TextView mNoExitingTv;
+    @BindView(R.id.preview_compose_loading)
+    LoadingView mLoadingView;
 
     private String mPlayUri;
     private String mFilterId;
@@ -97,14 +98,14 @@ public class PreviewActivity extends BaseActivity {
                     activity.updateProgressUI(progress, null);
                     break;
                 case MSG_PROGRESS_FINISH:
-                    activity.updateProgressUI(1f, () -> Toast.makeText(PreviewActivity.this, "合成完成", Toast.LENGTH_LONG).show());
-                    //TODO compose succeed
+                    removeCallbacksAndMessages(null);
+                    activity.updateProgressUI(1f, () -> mLoadingView.finish("合成完成，棒棒哒(๑•̀ㅂ•́)و✧", false));
                     String outPath = (String) msg.obj;
-
+                    doComposeSuccess(outPath);
                     break;
                 case MSG_PROGRESS_FAILED:
-                    Toast.makeText(PreviewActivity.this, "合成失败", Toast.LENGTH_LONG).show();
-                    //TODO comose failed
+                    removeCallbacksAndMessages(null);
+                    mLoadingView.finish("合成失败，点我重试(￣_,￣ )", true);
                     break;
             }
 
@@ -129,6 +130,7 @@ public class PreviewActivity extends BaseActivity {
                 restartPlay(new PreviewRestartParams.Builder().setIsNotify(true).build());
             }
         });
+        mLoadingView.setOnRetryListener(() -> doComposeRetry());
     }
 
     private void initValues() {
@@ -239,7 +241,7 @@ public class PreviewActivity extends BaseActivity {
         mFinishImg.setVisibility(View.INVISIBLE);
         mBackImg.setVisibility(View.INVISIBLE);
         mRectProgressView.setVisibility(View.VISIBLE);
-        mNoExitingTv.setVisibility(View.VISIBLE);
+        mLoadingView.setVisibility(View.VISIBLE);
 
         doCompose(retPropSet);
 
@@ -292,7 +294,16 @@ public class PreviewActivity extends BaseActivity {
         }.start();
     }
 
-    private void goToPublishPage(String outPath){
+    private void doComposeSuccess(String outPath){
+        //TODO doComposeSuccess
+
+    }
+
+    private void doComposeRetry(){
+        Toast.makeText(this, "施工中=.=", Toast.LENGTH_SHORT).show();
+        mLoadingView.start();
+        mHandler.postDelayed(() -> mLoadingView.finish("合成失败，点我重试(￣_,￣ )", true), 2000);
+        //TODO doComposeFailed retry or finish
 
     }
 

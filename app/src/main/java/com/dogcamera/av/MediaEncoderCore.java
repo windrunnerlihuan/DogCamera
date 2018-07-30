@@ -7,6 +7,8 @@ package com.dogcamera.av;
 import android.annotation.SuppressLint;
 import android.media.MediaCodec;
 import android.media.MediaFormat;
+import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
 
 import java.nio.ByteBuffer;
@@ -110,6 +112,19 @@ public abstract class MediaEncoderCore {
                     if (VERBOSE) {
                         Log.d(TAG, "sent " + mBufferInfo.size + " bytes to muxer, ts=" +
                                 mBufferInfo.presentationTimeUs);
+                    }
+                    /*
+                    MediaCodec 有两种方式触发输出关键帧，一是由配置时设置的 KEY_FRAME_RATE 和 KEY_I_FRAME_INTERVAL
+                    参数自动触发，二是运行过程中通过 setParameters 手动触发输出关键帧。自动触发实际是按照帧数触发的，
+                    例如设置帧率为 25 fps，关键帧间隔为 2s，那就会每 50 帧输出一个关键帧，一旦实际帧率低于配置帧率，
+                    那就会导致关键帧间隔时间变长。由于 MediaCodec 启动后就不能修改配置帧率/关键帧间隔了，
+                    所以如果希望改变关键帧间隔帧数，就必须重启编码器。
+                    */
+                    //手动触发输出关键帧
+                    if (Build.VERSION.SDK_INT >= 18) {
+                        Bundle params = new Bundle();
+                        params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
+                        mEncoder.setParameters(params);
                     }
                 }
 

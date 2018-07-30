@@ -12,5 +12,9 @@
         <attr name="stroke_color" format="color" />
         <attr name="stroke_width" format="dimension" />
     </declare-styleable>
+
+    <declare-styleable name="LoadingView">
+        <attr name="text" format="string" />
+    </declare-styleable>
     
 </resources>

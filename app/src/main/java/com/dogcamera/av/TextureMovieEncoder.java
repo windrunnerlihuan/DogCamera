@@ -120,7 +120,6 @@ public class TextureMovieEncoder implements Runnable {
      */
     public void startRecording(EncoderConfig config) {
         Log.d(TAG, "Encoder: startRecording()");
-        System.out.println(TAG + " startRecording" + " thread:" + Thread.currentThread() + " time:" + System.currentTimeMillis());
 
         synchronized (mReadyFence) {
             if (mRunning) {
@@ -157,10 +156,9 @@ public class TextureMovieEncoder implements Runnable {
      * has completed).
      */
     public void stopRecording() {
-        System.out.println(TAG + " stopRecording" + " thread:" + Thread.currentThread() + " time:" + System.currentTimeMillis());
         mReady = mRunning = false;
         if (mHandler == null) {
-            System.out.println(TAG + " mHandler null");
+            Log.d(TAG, " mHandler null");
             return;
         }
         mHandler.sendMessage(mHandler.obtainMessage(MSG_STOP_RECORDING));
