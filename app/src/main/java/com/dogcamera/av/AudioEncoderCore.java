@@ -120,8 +120,13 @@ public class AudioEncoderCore extends MediaEncoderCore implements Runnable {
     @Override
     public void run() {
         while (mRecording) {
-            drainEncoder(false);
-            drainAudio(false);
+            try{
+                drainEncoder(false);
+                drainAudio(false);
+            } catch (Exception e){
+                //do - nothing
+            }
+
         }
 
         drainAudio(true);

@@ -118,6 +118,14 @@ public class RectProgressView extends View {
         mPrevTime = curTime;
     }
 
+    public void reset(){
+        mDrawLen = 0;
+        mPrevProgress = -1;
+        mPrevTime = 0;
+        mProgressRuns.clear();
+        invalidate();
+    }
+
     private class ProgressRunnable implements Runnable {
 
         float startProgress;

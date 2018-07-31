@@ -41,6 +41,12 @@ public class VideoUtils {
 
     private static final String TAG = "VideoUtils";
 
+    /**
+     * 这种方法目前有问题，仅仅在几个高配手机上是成功的，其他都是失败的
+     * @param fileList
+     * @param outPath
+     * @return
+     */
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     @Deprecated
     public static boolean joinVideoForSameCodec(List<String> fileList, String outPath) {
@@ -198,7 +204,7 @@ public class VideoUtils {
     @SuppressLint("NewApi")
     public static void transcodeVideo(String srcPath, String dstPath, RenderConfig config, MediaTranscoder.Listener listener) {
         //FIXME 一些机型需要适配
-        //TODO
+        //TODO 如果合成后的视频仍然是绿屏，就继续降低分辨率
         MediaFormatStrategy strategy = getAdaptableStrategy();
         try {
             MediaTranscoder.getInstance().transcodeVideoSync(srcPath, dstPath, strategy, config, listener);

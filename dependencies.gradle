@@ -1,4 +1,4 @@
-def supportVersion = "27.0.0"
+def supportVersion = "25.0.0"
 def constraintVersion = "1.0.2"
 //def rxBindingVersion = "0.4.0"
 //def retrofitVersion = "2.2.0"
@@ -14,11 +14,11 @@ def mp4parser2Version = "1.9.34"
 
 project.ext {
     android = [
-            compileSdkVersion: 27,
+            compileSdkVersion: 25,
             buildToolsVersion: "27.0.0",
             applicationId    : "com.dogcamera",
             minSdkVersion    : 16,
-            targetSdkVersion : 26,
+            targetSdkVersion : 25,
             versionCode      : 1,
             versionName      : "1.0",
     ]

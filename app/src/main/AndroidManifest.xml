@@ -6,7 +6,9 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
 
     <application
         android:name=".DogApplication"
@@ -16,56 +18,67 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <!--引导页-->
+        <!-- 引导页 -->
         <activity
             android:name=".activity.SplashActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Fullscreen.Dark">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <!--拍摄页-->
-        <activity android:name=".activity.CameraActivity"
+        <!-- 拍摄页 -->
+        <activity
+            android:name=".activity.CameraActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.TransparentBar">
+            android:theme="@style/AppTheme.TransparentBar"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data
                     android:host="camera"
                     android:scheme="dog" />
             </intent-filter>
         </activity>
-        <!--预览页-->
-        <activity android:name=".activity.PreviewActivity"
+        <!-- 预览页 -->
+        <activity
+            android:name=".activity.PreviewActivity"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.Fullscreen.Dark">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data
                     android:host="preview"
                     android:scheme="dog" />
             </intent-filter>
         </activity>
-        <!--发布页-->
-        <activity android:name=".activity.PublishActivity"
+        <!-- 发布页 -->
+
+        <activity
+            android:name=".activity.PublishActivity"
             android:screenOrientation="portrait"
-            android:theme="@style/AppTheme.Fullscreen">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data
                     android:host="publish"
                     android:scheme="dog" />
             </intent-filter>
         </activity>
-
     </application>
 
 </manifest>

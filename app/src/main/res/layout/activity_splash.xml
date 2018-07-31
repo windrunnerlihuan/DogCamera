@@ -43,5 +43,5 @@
         app:layout_constraintTop_toTopOf="@id/title"
         app:layout_constraintStart_toEndOf="@id/title"
         />
-    
+
 </android.support.constraint.ConstraintLayout>

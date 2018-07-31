@@ -3,6 +3,7 @@ package com.dogcamera.widget;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.drawable.AnimationDrawable;
+import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -82,9 +83,9 @@ public class LoadingView extends LinearLayout {
         }
     }
 
-    public void finish(String msg, boolean canRetry){
+    public void finish(int imgId, String msg, boolean canRetry){
         setClickable(canRetry);
-        mImageView.setImageDrawable(getResources().getDrawable(R.mipmap.loading_finish));
+        mImageView.setImageDrawable(getResources().getDrawable(imgId > 0 ? imgId : R.mipmap.loading_finish));
         if(!TextUtils.isEmpty(msg)){
             mTextView.setText(msg);
         }else{

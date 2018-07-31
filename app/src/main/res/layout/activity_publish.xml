@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:openDrawer="start">
+
+    <android.support.design.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".activity.PublishActivity">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:theme="@style/AppTheme.AppBarOverlay">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="?attr/colorPrimary"
+                app:title="发布（Beta）"
+                app:popupTheme="@style/AppTheme.PopupOverlay" />
+
+        </android.support.design.widget.AppBarLayout>
+
+        <!--自己的布局-->
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            >
+            
+            <ImageView
+                android:id="@+id/publish_video_img"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginTop="40dp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"/>
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@mipmap/publish_play_icon"
+                android:focusableInTouchMode="false"
+                app:layout_constraintTop_toTopOf="@id/publish_video_img"
+                app:layout_constraintStart_toStartOf="@id/publish_video_img"
+                app:layout_constraintEnd_toEndOf="@id/publish_video_img"
+                app:layout_constraintBottom_toBottomOf="@id/publish_video_img"
+                />
+
+            <TextView
+                android:id="@+id/publish_video_path"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/darker_gray"
+                android:textSize="18sp"
+                app:layout_constraintTop_toBottomOf="@id/publish_video_img"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                />
+
+            <TextView
+                android:id="@+id/publish_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/light_gray"
+                android:textSize="18sp"
+                app:layout_constraintTop_toBottomOf="@id/publish_video_path"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:text="发布页实在没什么写的，就随便弄一个，Android Studio自动生成的界面。上面那个图标点进去直接跳系统播放器，懒得写VideoView了。合成后的视频地址已经给出了，大家自己在文件夹里找吧～"
+                />
+
+
+
+        </android.support.constraint.ConstraintLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_margin="16dp"
+            android:src="@mipmap/publish_camera_icon"/>
+
+    </android.support.design.widget.CoordinatorLayout>
+
+    <android.support.design.widget.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:fitsSystemWindows="true"
+        app:headerLayout="@layout/nav_header_publish"
+        app:menu="@menu/activity_publish_drawer" />
+
+</android.support.v4.widget.DrawerLayout>

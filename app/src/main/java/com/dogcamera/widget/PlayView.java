@@ -127,7 +127,6 @@ public class PlayView extends BaseGLSurfaceView {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.O)
     public void startPlay(){
         if (TextUtils.isEmpty(mPlayVideoPath)) {
             return;

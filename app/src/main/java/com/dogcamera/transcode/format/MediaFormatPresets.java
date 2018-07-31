@@ -122,7 +122,7 @@ public class MediaFormatPresets {
         return format;
     }
 
-    public static MediaFormat getExportPress1280x720(int originalWidth, int originalHeight) {
+    public static MediaFormat getExportPreset1280x720(int originalWidth, int originalHeight) {
         int longerLength = Math.max(originalWidth, originalHeight);
         int shorterLength = Math.min(originalWidth, originalHeight);
 

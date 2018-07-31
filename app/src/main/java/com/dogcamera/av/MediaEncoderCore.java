@@ -121,11 +121,14 @@ public abstract class MediaEncoderCore {
                     所以如果希望改变关键帧间隔帧数，就必须重启编码器。
                     */
                     //手动触发输出关键帧
+                    //有的手机会失败,并且疯狂打log,暂时关闭
+                    /*
                     if (Build.VERSION.SDK_INT >= 18) {
                         Bundle params = new Bundle();
                         params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
                         mEncoder.setParameters(params);
                     }
+                    */
                 }
 
                 mEncoder.releaseOutputBuffer(encoderStatus, false);

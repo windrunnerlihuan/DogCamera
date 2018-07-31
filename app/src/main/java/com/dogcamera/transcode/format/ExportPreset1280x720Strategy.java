@@ -14,7 +14,7 @@ public class ExportPreset1280x720Strategy implements MediaFormatStrategy {
     public MediaFormat createVideoOutputFormat(MediaFormat inputFormat) {
         int width = inputFormat.getInteger("width");
         int height = inputFormat.getInteger("height");
-        MediaFormat outputFormat = MediaFormatPresets.getExportPress1280x720(width, height);
+        MediaFormat outputFormat = MediaFormatPresets.getExportPreset1280x720(width, height);
         int outWidth = outputFormat.getInteger("width");
         int outHeight = outputFormat.getInteger("height");
         Log.d(TAG, String.format("input: %dx%d => output: %dx%d", width, height, outWidth, outHeight));

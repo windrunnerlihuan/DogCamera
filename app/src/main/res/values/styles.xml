@@ -26,7 +26,7 @@
     <style name="AppTheme.Fullscreen.Dark" parent="AppTheme.Fullscreen">
         <item name="android:windowBackground">@android:color/background_dark</item>
     </style>
-    
+
     <style name="AppTheme.TransparentBar.FullScreen" parent="AppTheme.TransparentBar">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowContentOverlay">@null</item>

@@ -595,5 +595,36 @@ public class CameraActivity extends BaseActivity {
         startActivity(i);
     }
 
+    private void reset(){
+        FileUtils.deleteFiles(mTmpRecordPathList);
+        mRecordPathList.clear();
+        mTmpRecordPathList.clear();
+        mRecordProgressList.clear();
+        //录制时长
+        mProgressTimeMs = 0;
+        mRemainRecordTimeMs = RecordConstant.RECORD_TIME_MAX;
+        //录制按钮
+        mRecordBgView.setVisibility(View.VISIBLE);
+        mRecordStopBgView.setVisibility(View.GONE);
+        mRecordTv.setVisibility(View.VISIBLE);
+        //录制进度
+        mHandler.removeMessages(MSG_PROGRESS_UPDATE);
+        mRecordProgressView.updateProgressView(0);
+        mRecordTimeTv.setVisibility(View.GONE);
+        //进度条
+        mSegLineProgressView.removeAllViews();
+        //other
+        mRecordDeleteImg.setVisibility(View.GONE);
+        mRecordNextTv.setVisibility(View.GONE);
+        mRecordTv.setText("点击拍摄");
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        //onNewIntent 重新拍摄
+        reset();
+    }
+
 
 }

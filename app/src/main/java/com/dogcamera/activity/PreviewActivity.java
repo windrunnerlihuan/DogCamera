@@ -1,5 +1,7 @@
 package com.dogcamera.activity;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -8,6 +10,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.util.SimpleArrayMap;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -23,6 +26,7 @@ import com.dogcamera.module.PreviewRestartParams;
 import com.dogcamera.transcode.MediaTranscoder;
 import com.dogcamera.transcode.engine.RenderConfig;
 import com.dogcamera.utils.DogConstants;
+import com.dogcamera.utils.FileUtils;
 import com.dogcamera.utils.VideoUtils;
 import com.dogcamera.widget.LoadingView;
 import com.dogcamera.widget.PlayView;
@@ -99,13 +103,15 @@ public class PreviewActivity extends BaseActivity {
                     break;
                 case MSG_PROGRESS_FINISH:
                     removeCallbacksAndMessages(null);
-                    activity.updateProgressUI(1f, () -> mLoadingView.finish("合成完成，棒棒哒(๑•̀ㅂ•́)و✧", false));
+                    activity.updateProgressUI(1f, () -> mLoadingView.finish(-1, "合成完成，棒棒哒(๑•̀ㅂ•́)و✧", false));
                     String outPath = (String) msg.obj;
                     doComposeSuccess(outPath);
                     break;
                 case MSG_PROGRESS_FAILED:
                     removeCallbacksAndMessages(null);
-                    mLoadingView.finish("合成失败，点我重试(￣_,￣ )", true);
+                    mLoadingView.finish(-1, "合成失败，点我重试(￣_,￣ )", true);
+                    String dirtyPath = (String) msg.obj;
+                    doComposeFailed(dirtyPath);
                     break;
             }
 
@@ -274,7 +280,6 @@ public class PreviewActivity extends BaseActivity {
                             @Override
                             public void onTranscodeCompleted() {
                                 Log.e(TAG, "onTranscodeCompleted");
-                                mHandler.sendEmptyMessage(MSG_PROGRESS_FINISH);
                                 mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_FINISH, outpath));
                             }
 
@@ -287,7 +292,7 @@ public class PreviewActivity extends BaseActivity {
                             @Override
                             public void onTranscodeFailed(Exception exception) {
                                 Log.e(TAG, "onTranscodeFailed");
-                                mHandler.sendEmptyMessage(MSG_PROGRESS_FAILED);
+                                mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_FAILED, outpath));
                             }
                         });
             }
@@ -295,16 +300,27 @@ public class PreviewActivity extends BaseActivity {
     }
 
     private void doComposeSuccess(String outPath){
-        //TODO doComposeSuccess
+        //doComposeSuccess go to publish page
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("dog://publish"));
+        i.putExtra("outPath", outPath);
+        startActivity(i);
+        PreviewActivity.this.finish();
+    }
 
+    private void doComposeFailed(String dirtyPath){
+        //doComposeSuccess
+        FileUtils.deleteFile(dirtyPath);
+        mRectProgressView.reset();
+        mRectProgressView.setVisibility(View.GONE);
     }
 
     private void doComposeRetry(){
-        Toast.makeText(this, "施工中=.=", Toast.LENGTH_SHORT).show();
         mLoadingView.start();
-        mHandler.postDelayed(() -> mLoadingView.finish("合成失败，点我重试(￣_,￣ )", true), 2000);
-        //TODO doComposeFailed retry or finish
-
+        /* test
+        mHandler.postDelayed(() -> mLoadingView.finish( -1,"合成失败，点我重试(￣_,￣ )", true), 2000);
+        */
+        //doComposeFailed retry
+        finishPreview();
     }
 
     @Override
