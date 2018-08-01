@@ -4,6 +4,7 @@ import android.media.MediaCodec;
 import android.media.MediaFormat;
 
 import com.dogcamera.transcode.compat.MediaCodecBufferCompatWrapper;
+import com.dogcamera.utils.ByteUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -324,38 +325,10 @@ class AudioChannelUgly {
 
         srcBuffer.data.clear();
         ShortBuffer srcShortBuffer = srcBuffer.data;
-
+        //混音 混合小的buffer数
         ShortBuffer mixInBuffer = ByteBuffer.allocate(minBufferReadNum * BYTES_PER_SHORT).order(ByteOrder.nativeOrder()).asShortBuffer();
-        for (int i = 0; i < minBufferReadNum; i++) {
-            int a = srcShortBuffer.get();
-            int b = convertSugarShortBuffer.get();
-            short result;
-            if (a < 0 && b < 0) {
-                int i1 = a + b ;
-                if (i1 < -32768) {
-                    result = -32768;
-                }else{
-                    result = (short) i1;
-                }
-            } else if (a > 0 && b > 0) {
-                int i1 = a + b;
-                if (i1 > 32767) {
-                    result = 32767;
-                }else{
-                    result = (short) i1;
-                }
-            } else {
-                int i1 = a + b;
-                if (i1 > 32767) {
-                    result = 32767;
-                } else if (i1 < -32768) {
-                    result = -32768;
-                } else {
-                    result = (short) i1;
-                }
-            }
-            mixInBuffer.put(result);
-        }
+        ByteUtils.mixByteSpecLen(srcShortBuffer, convertSugarShortBuffer, minBufferReadNum, mixInBuffer);
+        //余下的addFirst进入FillBuffer，下次继续处理
         int mixOverFlowNum = srcCapacity - sugarCapacity;
         if (mixOverFlowNum != 0) {
             ShortBuffer remixOverFlowBuffer = ByteBuffer.allocate(Math.abs(mixOverFlowNum) * BYTES_PER_SHORT).order(ByteOrder.nativeOrder()).asShortBuffer();

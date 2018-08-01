@@ -276,7 +276,7 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder, MixConfig {
             if (trackIndex >= 0 && trackIndex != mTrackIndex) {
                 mExtractor.selectTrack(mTrackIndex);
             }
-        }else{
+        } else {
             if(trackIndex >= 0 && trackIndex != mTrackIndex) {
                 return DRAIN_STATE_NONE;
             }
@@ -286,7 +286,6 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder, MixConfig {
         if (result < 0) return DRAIN_STATE_NONE;
         if (trackIndex < 0) {
             mIsExtractorEOS = true;
-//            mIsSurgarExtractorEOS = true;
             mDecoder.queueInputBuffer(result, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
             return DRAIN_STATE_NONE;
         }
@@ -350,7 +349,6 @@ public class AudioTrackTranscoderUgly implements TrackTranscoder, MixConfig {
 
         if ((mBufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
             mIsDecoderEOS = true;
-//            mIsSurgarDecoderEOS = true;
             mAudioChannelUgly.drainDecoderBufferAndQueue(AudioChannel.BUFFER_INDEX_END_OF_STREAM, 0);
         } else if (mBufferInfo.size > 0) {
             mAudioChannelUgly.drainDecoderBufferAndQueue(result, mBufferInfo.presentationTimeUs);
