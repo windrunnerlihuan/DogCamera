@@ -376,7 +376,7 @@ public class CameraActivity extends BaseActivity {
 
     private void showExitDialog() {
         AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("Are you OK ?")
+                .setTitle("Do you want to exit ?")
                 .setItems(new String[]{"Yes", "No"}, ((dialogInterface, i) -> {
                     if (i == 0) {
                         mRecordView.stopRecord();
