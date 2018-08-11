@@ -24,6 +24,7 @@ import android.opengl.GLES20;
 
 import com.dogcamera.filter.GPUImageExtTexFilter;
 import com.dogcamera.filter.GPUImageFilterGroup;
+import com.dogcamera.filter.GPUImageWaterMarkFilter;
 import com.dogcamera.utils.FilterUtils;
 import com.dogcamera.utils.OpenGlUtils;
 
@@ -101,6 +102,9 @@ public class TextureRenderAdvance extends AbsTextureRender{
         mFilterGroup.addFilter(new GPUImageExtTexFilter());
         //add yourself filter
         mFilterGroup.addFilter(FilterUtils.createFilter(mRenderConfig.filterId));
+        GPUImageWaterMarkFilter waterMarkFilter = new GPUImageWaterMarkFilter();
+        waterMarkFilter.setDefaultWaterMark();
+        mFilterGroup.addFilter(waterMarkFilter);
 
         mFilterGroup.init();
         GLES20.glUseProgram(mFilterGroup.getProgram());
