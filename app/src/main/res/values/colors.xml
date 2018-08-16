@@ -5,6 +5,7 @@
     <color name="colorAccent">#FF4081</color>
 
     <color name="light_gray">#FF999999</color>
+    <color name="dark_gray">#FF2c2c2c</color>
 
     <color name="record_button_progress_arc">#80ffffff</color>
 

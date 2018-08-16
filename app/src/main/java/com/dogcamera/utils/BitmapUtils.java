@@ -1,7 +1,12 @@
 package com.dogcamera.utils;
 
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
+import android.view.View;
 
 public class BitmapUtils {
 
@@ -112,5 +117,37 @@ public class BitmapUtils {
         }
         origin.recycle();
         return newBM;
+    }
+
+    public static Bitmap view2Bitmap(View v){
+        if(v == null){
+            return null;
+        }
+        if(v.getWidth() <= 0 || v.getHeight() <= 0){
+            v.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                    View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+            v.layout(0, 0, v.getMeasuredWidth(), v.getMeasuredHeight());
+        }
+        //double check
+        if(v.getWidth() <= 0 || v.getHeight() <= 0){
+            return null;
+        }
+        Bitmap ret = Bitmap.createBitmap(v.getWidth(), v.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(ret);
+        Drawable d = v.getBackground();
+        if(d != null){
+            d.draw(c);
+        }else{
+            c.drawColor(Color.TRANSPARENT);
+        }
+        v.draw(c);
+        return ret;
+    }
+
+    public static Bitmap createBitmapWithAlphaPixel(int with, int height, Bitmap srcBm, int offsetX, int offsetY){
+        Bitmap dstBm = Bitmap.createBitmap(with, height, Bitmap.Config.ARGB_8888);
+        Canvas c = new Canvas(dstBm);
+        c.drawBitmap(srcBm, offsetX, offsetY, new Paint());
+        return dstBm;
     }
 }

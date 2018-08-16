@@ -224,9 +224,9 @@ public abstract class BaseGLSurfaceView extends GLSurfaceView implements GLSurfa
         return coordinate == 0.0f ? distance : 1 - distance;
     }
 
-    public void changeGpuImageFilter(final GPUImageFilter filter) {
+    public void changeGpuImageFilter(GPUImageFilter filter) {
         mCurrentGPUImageFilter = filter;
-        runOnDraw(() -> initGPUImageFilter(mSurfaceWidth, mSurfaceHeight, filter));
+        runOnDraw(() -> initGPUImageFilter(mSurfaceWidth, mSurfaceHeight, mCurrentGPUImageFilter));
     }
 
     public GPUImageFilter getCurrentGPUImageFilter() {

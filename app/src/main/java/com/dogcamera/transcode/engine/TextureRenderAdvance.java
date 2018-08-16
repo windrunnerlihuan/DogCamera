@@ -18,15 +18,22 @@
 // modified: removed unused method bodies
 // modified: use GL_LINEAR for GL_TEXTURE_MIN_FILTER to improve quality.
 package com.dogcamera.transcode.engine;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.SurfaceTexture;
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
 
+import com.dogcamera.DogApplication;
+import com.dogcamera.R;
+import com.dogcamera.filter.GPUImageAlphaBlendFilter;
 import com.dogcamera.filter.GPUImageExtTexFilter;
 import com.dogcamera.filter.GPUImageFilterGroup;
 import com.dogcamera.filter.GPUImageWaterMarkFilter;
+import com.dogcamera.utils.BitmapUtils;
 import com.dogcamera.utils.FilterUtils;
 import com.dogcamera.utils.OpenGlUtils;
+import com.dogcamera.utils.ViewUtils;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -101,11 +108,30 @@ public class TextureRenderAdvance extends AbsTextureRender{
         mFilterGroup = new GPUImageFilterGroup();
         mFilterGroup.addFilter(new GPUImageExtTexFilter());
         //add yourself filter
+        //滤镜
         mFilterGroup.addFilter(FilterUtils.createFilter(mRenderConfig.filterId));
-        GPUImageWaterMarkFilter waterMarkFilter = new GPUImageWaterMarkFilter();
-        waterMarkFilter.setDefaultWaterMark();
-        mFilterGroup.addFilter(waterMarkFilter);
-
+        //水印
+        if(mRenderConfig.needWaterMark){
+            //TODO GPUImageWaterMarkFilter这个类有问题，建议使用GPUImageNormalBlendFilter替换掉它
+            GPUImageWaterMarkFilter waterMarkFilter = new GPUImageWaterMarkFilter();
+            waterMarkFilter.setDefaultWaterMark();
+            mFilterGroup.addFilter(waterMarkFilter);
+        }
+        //贴纸
+        if(mRenderConfig.chart > 0){
+            GPUImageAlphaBlendFilter chartFilter = new GPUImageAlphaBlendFilter();
+            //TODO 这里设置成居中，大小也设成固定大小。也可以自定义位置和大小，我嫌麻烦，不想弄了
+            int height = ViewUtils.dip2px(DogApplication.getInstance(), 50);
+            Bitmap originBm = BitmapFactory.decodeResource(DogApplication.getInstance().getResources(), mRenderConfig.chart);
+            Bitmap scaleBm = BitmapUtils.scaleBitmap(originBm, height * 1.0f / originBm.getHeight());
+            int offsetX = (mRenderConfig.outputVideoWidth - scaleBm.getWidth()) / 2;
+            int offsetY = (mRenderConfig.outputVideoHeight - scaleBm.getHeight()) / 2;
+            Bitmap dstBm = BitmapUtils.createBitmapWithAlphaPixel(mRenderConfig.outputVideoWidth, mRenderConfig.outputVideoHeight,
+                    scaleBm, offsetX, offsetY);
+            chartFilter.setBitmap(dstBm);
+            chartFilter.setMix(1.0f);
+            mFilterGroup.addFilter(chartFilter);
+        }
         mFilterGroup.init();
         GLES20.glUseProgram(mFilterGroup.getProgram());
         mFilterGroup.onOutputSizeChanged(mRenderConfig.outputVideoWidth, mRenderConfig.outputVideoHeight);

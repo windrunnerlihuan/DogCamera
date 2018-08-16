@@ -21,13 +21,17 @@ import android.widget.Toast;
 import com.dogcamera.R;
 import com.dogcamera.av.RecordConstant;
 import com.dogcamera.base.BaseActivity;
+import com.dogcamera.fragment.ChartFragment;
 import com.dogcamera.fragment.MusicFragment;
+import com.dogcamera.fragment.SimpleChartFragment;
+import com.dogcamera.module.ChartBean;
 import com.dogcamera.module.PreviewRestartParams;
 import com.dogcamera.transcode.MediaTranscoder;
 import com.dogcamera.transcode.engine.RenderConfig;
 import com.dogcamera.utils.DogConstants;
 import com.dogcamera.utils.FileUtils;
 import com.dogcamera.utils.VideoUtils;
+import com.dogcamera.utils.ViewUtils;
 import com.dogcamera.widget.LoadingView;
 import com.dogcamera.widget.PlayView;
 import com.dogcamera.widget.RectProgressView;
@@ -127,10 +131,9 @@ public class PreviewActivity extends BaseActivity {
     @Override
     protected void initViews(Bundle savedInstanceState) {
         initValues();
-
         mVideoView.setLooping(true);
         mVideoView.setPlayVideoPath(mPlayUri);
-        mVideoView.setOnPlayStatusListener(new PlayView.OnPlayStatusListenerAdapter(){
+        mVideoView.setOnPlayStatusListener(new PlayView.OnPlayStatusListenerAdapter() {
             @Override
             public void onCompletion() {
                 restartPlay(new PreviewRestartParams.Builder().setIsNotify(true).build());
@@ -192,11 +195,14 @@ public class PreviewActivity extends BaseActivity {
             String t = null;
             if (SYMBOLS[1].equals(tag)) {
                 t = SYMBOLS[1];
+                // 音乐
                 target = new MusicFragment();
             } else if (SYMBOLS[2].equals(tag)) {
                 t = SYMBOLS[2];
-                //TODO 贴纸
-
+                // 贴纸
+                target = new ChartFragment();
+                //单页数据可以使用SimpleChartFragment
+                //target = new SimpleChartFragment();
             } else if (SYMBOLS[3].equals(tag)) {
                 t = SYMBOLS[3];
                 //TODO 滤镜
@@ -214,12 +220,43 @@ public class PreviewActivity extends BaseActivity {
         ft.commitAllowingStateLoss();
     }
 
+    public void addChart(ChartBean cb) {
+        ImageView chartImg = (ImageView) mRootLayout.findViewById(R.id.preview_chart_img);
+        if(cb == null){
+            if(chartImg == null){
+                return;
+            }else{
+                mRootLayout.removeView(chartImg);
+            }
+        }else{
+            if (chartImg == null) {
+                chartImg = new ImageView(this);
+                chartImg.setId(R.id.preview_chart_img);
+                chartImg.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                ConstraintLayout.LayoutParams lp = new ConstraintLayout.LayoutParams(ViewUtils.dip2px(this, 70),
+                        ViewUtils.dip2px(this, 70));
+                //TODO 这里设置成居中，也可以自定义位置，我嫌麻烦，不想弄了
+                lp.startToStart = R.id.preview_videoview;
+                lp.endToEnd = R.id.preview_videoview;
+                lp.topToTop = R.id.preview_videoview;
+                lp.bottomToBottom = R.id.preview_videoview;
+                chartImg.setLayoutParams(lp);
+                mRootLayout.addView(chartImg);
+            }
+            chartImg.setImageResource(cb.imgRes);
+        }
+        restartPlay(new PreviewRestartParams.Builder()
+                .setIsNotify(true)
+                .build());
+
+    }
+
     public void restartPlay(PreviewRestartParams p) {
-        if(p != null){
-            if(p.isMute != null){
+        if (p != null) {
+            if (p.isMute != null) {
                 mVideoView.setMute(p.isMute);
             }
-            if(p.isNotify != null && p.isNotify){
+            if (p.isNotify != null && p.isNotify) {
                 for (PreviewRestartParams.PreviewRestartListener l : mRestartListener) {
                     l.onPreviewRestart();
                 }
@@ -228,14 +265,14 @@ public class PreviewActivity extends BaseActivity {
         mVideoView.restartPlay();
     }
 
-    private void finishPreview(){
+    private void finishPreview() {
         mIsComposing = true;
         //function
         mVideoView.stopPlay();
         SimpleArrayMap<Integer, Object> retPropSet = new SimpleArrayMap<>();
         for (PreviewRestartParams.PreviewRestartListener l : mRestartListener) {
             l.onPreviewStop();
-            if(l.onPreviewGetPropSet() != null){
+            if (l.onPreviewGetPropSet() != null) {
                 retPropSet.putAll(l.onPreviewGetPropSet());
             }
         }
@@ -253,9 +290,9 @@ public class PreviewActivity extends BaseActivity {
 
     }
 
-    private void doCompose(SimpleArrayMap<Integer, Object> retPropSet){
+    private void doCompose(SimpleArrayMap<Integer, Object> retPropSet) {
 
-        new Thread(){
+        new Thread() {
             @Override
             public void run() {
                 String outpath = RecordConstant.RECORD_DIR + File.separator + "transcode" + System.currentTimeMillis() + ".mp4";
@@ -267,14 +304,18 @@ public class PreviewActivity extends BaseActivity {
                                 .setOriginMute(
                                         retPropSet.get(DogConstants.PREVIEW_KEY_ORIGIN_MUTE) != null ?
                                                 (Boolean) retPropSet.get(DogConstants.PREVIEW_KEY_ORIGIN_MUTE) :
-                                                false
-                                )
+                                                false)
+                                .setChart(
+                                        retPropSet.get(DogConstants.PREVIEW_KEY_CHART) != null ?
+                                                (Integer) retPropSet.get(DogConstants.PREVIEW_KEY_CHART) :
+                                                -1)
+                                .setNeedWaterMark(true)
                                 .build(),
                         new MediaTranscoder.Listener() {
                             @Override
                             public void onTranscodeProgress(double progress) {
-                                Log.e(TAG, "合成进度： " + (float)progress);
-                                mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_UPDATE, (float)progress));
+                                Log.e(TAG, "合成进度： " + (float) progress);
+                                mHandler.sendMessage(mHandler.obtainMessage(MSG_PROGRESS_UPDATE, (float) progress));
                             }
 
                             @Override
@@ -299,7 +340,7 @@ public class PreviewActivity extends BaseActivity {
         }.start();
     }
 
-    private void doComposeSuccess(String outPath){
+    private void doComposeSuccess(String outPath) {
         //doComposeSuccess go to publish page
         Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("dog://publish"));
         i.putExtra("outPath", outPath);
@@ -307,14 +348,14 @@ public class PreviewActivity extends BaseActivity {
         PreviewActivity.this.finish();
     }
 
-    private void doComposeFailed(String dirtyPath){
+    private void doComposeFailed(String dirtyPath) {
         //doComposeSuccess
         FileUtils.deleteFile(dirtyPath);
         mRectProgressView.reset();
         mRectProgressView.setVisibility(View.GONE);
     }
 
-    private void doComposeRetry(){
+    private void doComposeRetry() {
         mLoadingView.start();
         /* test
         mHandler.postDelayed(() -> mLoadingView.finish( -1,"合成失败，点我重试(￣_,￣ )", true), 2000);
@@ -325,7 +366,7 @@ public class PreviewActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
-        if(mIsComposing){
+        if (mIsComposing) {
             Toast.makeText(this, "正在合成，请勿退出(ノ=Д=)ノ┻━┻", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -344,8 +385,7 @@ public class PreviewActivity extends BaseActivity {
 
     @OnClick(R.id.preview_topbar_chart)
     void onChartClick() {
-//        showTopSelectFragment(SYMBOLS[2]);
-        Toast.makeText(this, "贴纸施工中-.-", Toast.LENGTH_SHORT).show();
+        showTopSelectFragment(SYMBOLS[2]);
     }
 
     @OnClick(R.id.preview_topbar_effect)

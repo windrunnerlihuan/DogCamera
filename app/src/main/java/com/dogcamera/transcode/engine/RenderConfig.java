@@ -10,6 +10,10 @@ public class RenderConfig {
     //音频相关
     public String audioPath;
     public boolean originMute;
+    //水印
+    public boolean needWaterMark;
+    //贴纸
+    public int chart;
 
     private RenderConfig(){
 
@@ -22,6 +26,8 @@ public class RenderConfig {
         private String filterId;
         private String audioPath;
         public boolean originMute;
+        public boolean needWaterMark;
+        public int chart;
 
         public Builder(){
 
@@ -51,6 +57,15 @@ public class RenderConfig {
             this.originMute = originMute;
             return this;
         }
+        public Builder setNeedWaterMark(boolean needWaterMark){
+            this.needWaterMark = needWaterMark;
+            return this;
+        }
+        public Builder setChart(int chart){
+            this.chart = chart;
+            return this;
+        }
+
 
         public RenderConfig build(){
             RenderConfig config = new RenderConfig();
@@ -60,6 +75,8 @@ public class RenderConfig {
             config.filterId = this.filterId;
             config.audioPath = this.audioPath;
             config.originMute = this.originMute;
+            config.needWaterMark = this.needWaterMark;
+            config.chart = this.chart;
             return config;
         }
     }
